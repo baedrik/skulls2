@@ -1,0 +1,310 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HandleMsg",
+  "description": "Handle messages",
+  "anyOf": [
+    {
+      "description": "select random NFTs that can be used to claim potions",
+      "type": "object",
+      "required": [
+        "raffle"
+      ],
+      "properties": {
+        "raffle": {
+          "type": "object",
+          "required": [
+            "entropy",
+            "num_picks",
+            "partner_percent"
+          ],
+          "properties": {
+            "entropy": {
+              "description": "entropy for the prng",
+              "type": "string"
+            },
+            "num_picks": {
+              "description": "number of winners to draw",
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "partner_percent": {
+              "description": "percentage of winners that should go to partner NFT owners",
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "BatchReceiveNft is called by the NFT contract to claim potions using the sent NFTs",
+      "type": "object",
+      "required": [
+        "batch_receive_nft"
+      ],
+      "properties": {
+        "batch_receive_nft": {
+          "type": "object",
+          "required": [
+            "from",
+            "token_ids"
+          ],
+          "properties": {
+            "from": {
+              "description": "address of the owner of the tokens being used to claim",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/HumanAddr"
+                }
+              ]
+            },
+            "token_ids": {
+              "description": "list of tokens sent (used to claim)",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "ReceiveNft is only included to maintatin CW721 compliance.  Hopefully everyone uses the superior BatchReceiveNft process.  ReceiveNft is called by the NFT contract to claim a potion using the sent NFT",
+      "type": "object",
+      "required": [
+        "receive_nft"
+      ],
+      "properties": {
+        "receive_nft": {
+          "type": "object",
+          "required": [
+            "sender",
+            "token_id"
+          ],
+          "properties": {
+            "sender": {
+              "description": "address of the owner of the token being used to claim",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/HumanAddr"
+                }
+              ]
+            },
+            "token_id": {
+              "description": "the token sent (used to claim)",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Create a viewing key",
+      "type": "object",
+      "required": [
+        "create_viewing_key"
+      ],
+      "properties": {
+        "create_viewing_key": {
+          "type": "object",
+          "required": [
+            "entropy"
+          ],
+          "properties": {
+            "entropy": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Set a viewing key",
+      "type": "object",
+      "required": [
+        "set_viewing_key"
+      ],
+      "properties": {
+        "set_viewing_key": {
+          "type": "object",
+          "required": [
+            "key"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "padding": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "allows an admin to add more admins",
+      "type": "object",
+      "required": [
+        "add_admins"
+      ],
+      "properties": {
+        "add_admins": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "description": "list of address to grant admin priveleges",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "allows an admin to remove admin addresses",
+      "type": "object",
+      "required": [
+        "remove_admins"
+      ],
+      "properties": {
+        "remove_admins": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "description": "list of address to revoke admin priveleges from",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "disallow the use of a permit",
+      "type": "object",
+      "required": [
+        "revoke_permit"
+      ],
+      "properties": {
+        "revoke_permit": {
+          "type": "object",
+          "required": [
+            "permit_name"
+          ],
+          "properties": {
+            "permit_name": {
+              "description": "name of the permit that is no longer valid",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "set a viewing key with an nft contract to facilitate in retrieval of an NFT from an unregistered collection",
+      "type": "object",
+      "required": [
+        "set_viewing_key_with_collection"
+      ],
+      "properties": {
+        "set_viewing_key_with_collection": {
+          "type": "object",
+          "required": [
+            "nft_contract",
+            "viewing_key"
+          ],
+          "properties": {
+            "nft_contract": {
+              "description": "the code hash and address of the nft contract",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/ContractInfo"
+                }
+              ]
+            },
+            "viewing_key": {
+              "description": "viewing key to set with the nft contract",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "retrieve an nft that was sent from an unregistered collection",
+      "type": "object",
+      "required": [
+        "retrieve_nft"
+      ],
+      "properties": {
+        "retrieve_nft": {
+          "type": "object",
+          "required": [
+            "nft_contract",
+            "token_ids"
+          ],
+          "properties": {
+            "nft_contract": {
+              "description": "the code hash and address of the nft contract",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/ContractInfo"
+                }
+              ]
+            },
+            "token_ids": {
+              "description": "ids of the tokens to transfer to the admin doing this tx",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "ContractInfo": {
+      "description": "code hash and address of a secret contract",
+      "type": "object",
+      "required": [
+        "address",
+        "code_hash"
+      ],
+      "properties": {
+        "address": {
+          "description": "contract's address",
+          "allOf": [
+            {
+              "$ref": "#/definitions/HumanAddr"
+            }
+          ]
+        },
+        "code_hash": {
+          "description": "contract's code hash string",
+          "type": "string"
+        }
+      }
+    },
+    "HumanAddr": {
+      "type": "string"
+    }
+  }
+}

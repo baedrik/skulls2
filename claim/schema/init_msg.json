@@ -1,0 +1,190 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InitMsg",
+  "description": "Instantiation message",
+  "type": "object",
+  "required": [
+    "entropy",
+    "metadata",
+    "partner_info",
+    "potion_contract",
+    "skulls_contract"
+  ],
+  "properties": {
+    "admins": {
+      "description": "admins in addition to the instantiator",
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "$ref": "#/definitions/HumanAddr"
+      }
+    },
+    "entropy": {
+      "description": "entropy used for prng seed",
+      "type": "string"
+    },
+    "metadata": {
+      "description": "metadata for the minted potions",
+      "allOf": [
+        {
+          "$ref": "#/definitions/Metadata"
+        }
+      ]
+    },
+    "partner_info": {
+      "description": "info about the partner collection",
+      "allOf": [
+        {
+          "$ref": "#/definitions/PartnerInfo"
+        }
+      ]
+    },
+    "potion_contract": {
+      "description": "code hash and address of the potion contract",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ContractInfo"
+        }
+      ]
+    },
+    "skulls_contract": {
+      "description": "code hash and address of the skulls contract",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ContractInfo"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "ContractInfo": {
+      "description": "code hash and address of a secret contract",
+      "type": "object",
+      "required": [
+        "address",
+        "code_hash"
+      ],
+      "properties": {
+        "address": {
+          "description": "contract's address",
+          "allOf": [
+            {
+              "$ref": "#/definitions/HumanAddr"
+            }
+          ]
+        },
+        "code_hash": {
+          "description": "contract's code hash string",
+          "type": "string"
+        }
+      }
+    },
+    "Extension": {
+      "description": "metadata extension You can add any metadata fields you need here.  These fields are based on https://docs.opensea.io/docs/metadata-standards and are the metadata fields that Stashh uses for robust NFT display.  Urls should be prefixed with `http://`, `https://`, `ipfs://`, or `ar://`",
+      "type": "object",
+      "required": [
+        "attributes",
+        "description",
+        "image",
+        "name"
+      ],
+      "properties": {
+        "attributes": {
+          "description": "item attributes",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Trait"
+          }
+        },
+        "description": {
+          "description": "item description",
+          "type": "string"
+        },
+        "image": {
+          "description": "url to the image",
+          "type": "string"
+        },
+        "name": {
+          "description": "name of the item",
+          "type": "string"
+        }
+      }
+    },
+    "HumanAddr": {
+      "type": "string"
+    },
+    "Metadata": {
+      "description": "token metadata stripped down only to what is used by the claim contract",
+      "type": "object",
+      "required": [
+        "extension"
+      ],
+      "properties": {
+        "extension": {
+          "description": "optional on-chain metadata",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Extension"
+            }
+          ]
+        }
+      }
+    },
+    "PartnerInfo": {
+      "description": "info about the partner collection",
+      "type": "object",
+      "required": [
+        "contract",
+        "count",
+        "name"
+      ],
+      "properties": {
+        "contract": {
+          "description": "code hash and address of the collection contract",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ContractInfo"
+            }
+          ]
+        },
+        "count": {
+          "description": "number of tokens in the partner collection",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "name": {
+          "description": "name of the collection",
+          "type": "string"
+        },
+        "starts_at_one": {
+          "description": "optionally true if the stringified int token ids start at 1 instead of 0. Defaults to false",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "Trait": {
+      "description": "attribute trait",
+      "type": "object",
+      "required": [
+        "trait_type",
+        "value"
+      ],
+      "properties": {
+        "trait_type": {
+          "description": "name of the trait",
+          "type": "string"
+        },
+        "value": {
+          "description": "trait value",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

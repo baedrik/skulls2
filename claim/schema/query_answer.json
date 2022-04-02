@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QueryAnswer",
+  "description": "responses to queries",
+  "anyOf": [
+    {
+      "description": "displays the NFTs eligible to claim potions",
+      "type": "object",
+      "required": [
+        "redeemable"
+      ],
+      "properties": {
+        "redeemable": {
+          "type": "object",
+          "required": [
+            "collection",
+            "count",
+            "round",
+            "token_ids"
+          ],
+          "properties": {
+            "collection": {
+              "description": "collection name",
+              "type": "string"
+            },
+            "count": {
+              "description": "count of redeemable NFTs for this collection/round",
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "round": {
+              "description": "raffle round",
+              "type": "integer",
+              "format": "uint16",
+              "minimum": 0.0
+            },
+            "token_ids": {
+              "description": "token IDs",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "displays the admins list",
+      "type": "object",
+      "required": [
+        "admins"
+      ],
+      "properties": {
+        "admins": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "description": "current admin list",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "list of which of the supplied token IDs are able to claim potions",
+      "type": "object",
+      "required": [
+        "which_are_winners"
+      ],
+      "properties": {
+        "which_are_winners": {
+          "type": "object",
+          "required": [
+            "partner",
+            "skulls"
+          ],
+          "properties": {
+            "partner": {
+              "description": "winning partner NFTs",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "skulls": {
+              "description": "winning skulls",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "list of claims",
+      "type": "object",
+      "required": [
+        "claimed"
+      ],
+      "properties": {
+        "claimed": {
+          "type": "object",
+          "required": [
+            "claims",
+            "count"
+          ],
+          "properties": {
+            "claims": {
+              "description": "list of claims",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Claim"
+              }
+            },
+            "count": {
+              "description": "number of potions claimed",
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            }
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "Claim": {
+      "description": "claim info",
+      "type": "object",
+      "required": [
+        "collection",
+        "owner",
+        "round",
+        "token_id"
+      ],
+      "properties": {
+        "collection": {
+          "description": "collection name",
+          "type": "string"
+        },
+        "owner": {
+          "description": "address that claimed",
+          "allOf": [
+            {
+              "$ref": "#/definitions/HumanAddr"
+            }
+          ]
+        },
+        "round": {
+          "description": "round the NFT was redeemed",
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "token_id": {
+          "description": "token ID",
+          "type": "string"
+        }
+      }
+    },
+    "HumanAddr": {
+      "type": "string"
+    }
+  }
+}

@@ -56,6 +56,8 @@ pub struct RollConfig {
     pub start_one: bool,
     /// round of rolling
     pub round: Option<u16>,
+    /// true if claims have been halted
+    pub halted: bool,
 }
 
 /// counts of unclaimed NFTs for one round

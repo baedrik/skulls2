@@ -114,6 +114,27 @@
           }
         }
       }
+    },
+    {
+      "description": "response of setting halt status",
+      "type": "object",
+      "required": [
+        "set_halt_status"
+      ],
+      "properties": {
+        "set_halt_status": {
+          "type": "object",
+          "required": [
+            "halted"
+          ],
+          "properties": {
+            "halted": {
+              "description": "true if claims have been halted",
+              "type": "boolean"
+            }
+          }
+        }
+      }
     }
   ],
   "definitions": {

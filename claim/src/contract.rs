@@ -69,6 +69,7 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
         num_tokens: msg.partner_info.count,
         start_one: msg.partner_info.starts_at_one.unwrap_or(false),
         round: None,
+        halted: false,
     };
     save(&mut deps.storage, ROLL_KEY, &roll)?;
 
@@ -138,8 +139,44 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
             nft_contract,
             token_ids,
         } => try_retrieve(deps, env, nft_contract, token_ids),
+        HandleMsg::SetHaltStatus { halt } => try_set_halt(deps, &env.message.sender, halt),
     };
     pad_handle_result(response, BLOCK_SIZE)
+}
+
+/// Returns HandleResult
+///
+/// sets halt status for claims
+///
+/// # Arguments
+///
+/// * `deps` - a mutable reference to Extern containing all the contract's external dependencies
+/// * `sender` - a reference to the message sender
+/// * `halt` - true if claims should be halted
+fn try_set_halt<S: Storage, A: Api, Q: Querier>(
+    deps: &mut Extern<S, A, Q>,
+    sender: &HumanAddr,
+    halt: bool,
+) -> HandleResult {
+    // only allow admins to do this
+    let admins: Vec<CanonicalAddr> = load(&deps.storage, ADMINS_KEY)?;
+    let sender_raw = deps.api.canonical_address(sender)?;
+    if !admins.contains(&sender_raw) {
+        return Err(StdError::unauthorized());
+    }
+    let mut roll: RollConfig = load(&deps.storage, ROLL_KEY)?;
+    if roll.halted != halt {
+        roll.halted = halt;
+        save(&mut deps.storage, ROLL_KEY, &roll)?;
+    }
+
+    Ok(HandleResponse {
+        messages: vec![],
+        log: vec![],
+        data: Some(to_binary(&HandleAnswer::SetHaltStatus {
+            halted: roll.halted,
+        })?),
+    })
 }
 
 /// Returns HandleResult
@@ -161,6 +198,9 @@ fn try_batch_receive_nft<S: Storage, A: Api, Q: Querier>(
     let collection_raw = deps.api.canonical_address(sender)?;
     let claim_inf: ClaimInfo = load(&deps.storage, CLAIM_KEY)?;
     let mut roll: RollConfig = load(&deps.storage, ROLL_KEY)?;
+    if roll.halted {
+        return Err(StdError::generic_err("Claims have been halted"));
+    }
     let round = roll
         .round
         .as_ref()
@@ -680,7 +720,11 @@ fn query_which<S: ReadonlyStorage>(
     let skulls = winners
         .pop()
         .ok_or_else(|| StdError::generic_err("We know the winners Vec has 2 elements"))?;
-    to_binary(&QueryAnswer::WhichAreWinners { skulls, partner })
+    to_binary(&QueryAnswer::WhichAreWinners {
+        halted: roll.halted,
+        skulls,
+        partner,
+    })
 }
 
 /// Returns QueryResult displaying the potion claims made
@@ -788,6 +832,7 @@ fn query_redeemable<S: ReadonlyStorage>(
         }
     }
     to_binary(&QueryAnswer::Redeemable {
+        halted: roll.halted,
         round: qry_round,
         collection,
         count,

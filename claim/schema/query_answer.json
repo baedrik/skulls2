@@ -15,6 +15,7 @@
           "required": [
             "collection",
             "count",
+            "halted",
             "round",
             "token_ids"
           ],
@@ -28,6 +29,10 @@
               "type": "integer",
               "format": "uint32",
               "minimum": 0.0
+            },
+            "halted": {
+              "description": "true if claims have been halted",
+              "type": "boolean"
             },
             "round": {
               "description": "raffle round",
@@ -80,10 +85,15 @@
         "which_are_winners": {
           "type": "object",
           "required": [
+            "halted",
             "partner",
             "skulls"
           ],
           "properties": {
+            "halted": {
+              "description": "true if claims have been halted",
+              "type": "boolean"
+            },
             "partner": {
               "description": "winning partner NFTs",
               "type": "array",

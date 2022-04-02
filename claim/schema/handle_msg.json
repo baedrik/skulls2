@@ -278,6 +278,27 @@
           }
         }
       }
+    },
+    {
+      "description": "set the halt status of claims",
+      "type": "object",
+      "required": [
+        "set_halt_status"
+      ],
+      "properties": {
+        "set_halt_status": {
+          "type": "object",
+          "required": [
+            "halt"
+          ],
+          "properties": {
+            "halt": {
+              "description": "true if claims should be halted",
+              "type": "boolean"
+            }
+          }
+        }
+      }
     }
   ],
   "definitions": {

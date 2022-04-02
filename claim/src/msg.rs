@@ -88,6 +88,11 @@ pub enum HandleMsg {
         /// ids of the tokens to transfer to the admin doing this tx
         token_ids: Vec<String>,
     },
+    /// set the halt status of claims
+    SetHaltStatus {
+        /// true if claims should be halted
+        halt: bool,
+    },
 }
 
 /// Responses from handle functions
@@ -115,6 +120,11 @@ pub enum HandleAnswer {
         skulls: u32,
         /// number of partner NFTs selected
         partner: u32,
+    },
+    /// response of setting halt status
+    SetHaltStatus {
+        /// true if claims have been halted
+        halted: bool,
     },
 }
 
@@ -177,6 +187,8 @@ pub enum QueryMsg {
 pub enum QueryAnswer {
     /// displays the NFTs eligible to claim potions
     Redeemable {
+        /// true if claims have been halted
+        halted: bool,
         /// raffle round
         round: u16,
         /// collection name
@@ -193,6 +205,8 @@ pub enum QueryAnswer {
     },
     /// list of which of the supplied token IDs are able to claim potions
     WhichAreWinners {
+        /// true if claims have been halted
+        halted: bool,
         /// winning skulls
         skulls: Vec<String>,
         /// winning partner NFTs

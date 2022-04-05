@@ -59,7 +59,7 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     let claim = ClaimInfo {
         skulls: msg.skulls_contract.get_store(&deps.api)?,
         partner: msg.partner_info.contract.get_store(&deps.api)?,
-        potion: msg.potion_contract.get_store(&deps.api)?,
+        potion: msg.potion_contract.into_store(&deps.api)?,
         meta: msg.metadata,
     };
     save(&mut deps.storage, CLAIM_KEY, &claim)?;
@@ -204,7 +204,7 @@ fn try_batch_receive_nft<S: Storage, A: Api, Q: Querier>(
     let round = roll
         .round
         .as_ref()
-        .cloned()
+        .copied()
         .ok_or_else(|| StdError::generic_err("No winners have been drawn yet"))?;
     let round_key = round.to_le_bytes();
     let count_store = ReadonlyPrefixedStorage::new(PREFIX_COUNTS, &deps.storage);
@@ -549,16 +549,8 @@ fn try_add_admins<S: Storage, A: Api, Q: Querier>(
     if !admins.contains(&sender_raw) {
         return Err(StdError::unauthorized());
     }
-    let mut save_it = false;
-    for admin in admins_to_add.iter() {
-        let raw = deps.api.canonical_address(admin)?;
-        if !admins.contains(&raw) {
-            admins.push(raw);
-            save_it = true;
-        }
-    }
     // only save if the list changed
-    if save_it {
+    if add_admins(&deps.api, &admins_to_add, &mut admins)? {
         save(&mut deps.storage, ADMINS_KEY, &admins)?;
     }
     Ok(HandleResponse {
@@ -708,9 +700,12 @@ fn query_which<S: ReadonlyStorage>(
             &[PREFIX_WINNER_MAP, &(coll as u8).to_le_bytes(), &round_key],
             storage,
         );
+        let wnrs = winners.get_mut(coll).ok_or_else(|| {
+            StdError::generic_err("Impossible for winners Vec to have less than 2 elements")
+        })?;
         for id in ids.into_iter() {
             if may_load::<u32, _>(&map_store, id.as_bytes())?.is_some() {
-                winners[coll].push(id);
+                wnrs.push(id);
             }
         }
     }

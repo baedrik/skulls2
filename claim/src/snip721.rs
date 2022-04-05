@@ -4,40 +4,6 @@ use schemars::JsonSchema;
 use secret_toolkit::utils::HandleCallback;
 use serde::{Deserialize, Serialize};
 
-/// information about the minting of the NFT
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub struct MintRunInfo {
-    /// optional address of the SNIP-721 contract creator
-    pub collection_creator: Option<HumanAddr>,
-    /// address of this minting contract as the NFT's creator
-    pub token_creator: HumanAddr,
-    /// optional time of minting (in seconds since 01/01/1970)
-    pub time_of_minting: Option<u64>,
-    /// number of the mint run this token was minted in.  This is
-    /// used to serialize identical NFTs
-    pub mint_run: u32,
-    /// serial number in this mint run.  This is used to serialize
-    /// identical NFTs
-    pub serial_number: u32,
-    /// optional total number of NFTs minted on this run.  This is used to
-    /// represent that this token is number m of n
-    pub quantity_minted_this_run: Option<u32>,
-}
-
-/// Serial number to give an NFT when minting
-#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema, Debug)]
-pub struct SerialNumber {
-    /// number of the mint run this token will be minted in.  This is
-    /// used to serialize identical NFTs
-    pub mint_run: u32,
-    /// serial number (in this mint run).  This is used to serialize
-    /// identical NFTs
-    pub serial_number: u32,
-    /// optional total number of NFTs minted on this run.  This is used to
-    /// represent that this token is number m of n
-    pub quantity_minted_this_run: Option<u32>,
-}
-
 /// snip721 handle msgs
 #[derive(Serialize)]
 #[serde(rename_all = "snake_case")]

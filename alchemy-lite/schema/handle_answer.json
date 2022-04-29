@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HandleAnswer",
+  "description": "Responses from handle functions",
+  "anyOf": [
+    {
+      "description": "response of both AddAdmins and RemoveAdmins",
+      "type": "object",
+      "required": [
+        "admins_list"
+      ],
+      "properties": {
+        "admins_list": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "description": "current admins",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "response from creating a viewing key",
+      "type": "object",
+      "required": [
+        "viewing_key"
+      ],
+      "properties": {
+        "viewing_key": {
+          "type": "object",
+          "required": [
+            "key"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "revoke_permit"
+      ],
+      "properties": {
+        "revoke_permit": {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "retrieve_nft"
+      ],
+      "properties": {
+        "retrieve_nft": {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "response of setting halt status",
+      "type": "object",
+      "required": [
+        "set_halt_status"
+      ],
+      "properties": {
+        "set_halt_status": {
+          "type": "object",
+          "required": [
+            "halted"
+          ],
+          "properties": {
+            "halted": {
+              "description": "true if halted",
+              "type": "boolean"
+            },
+            "potion": {
+              "description": "name of the single potion whose status was set, if applicable",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "response of adding potion and svg server contracts",
+      "type": "object",
+      "required": [
+        "add_contracts"
+      ],
+      "properties": {
+        "add_contracts": {
+          "type": "object",
+          "required": [
+            "potion_contracts",
+            "svg_servers"
+          ],
+          "properties": {
+            "potion_contracts": {
+              "description": "potion contracts",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContractInfo"
+              }
+            },
+            "svg_servers": {
+              "description": "svg server contracts",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContractInfo"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "response from removing potion contracts",
+      "type": "object",
+      "required": [
+        "remove_potion_contracts"
+      ],
+      "properties": {
+        "remove_potion_contracts": {
+          "type": "object",
+          "required": [
+            "potion_contracts"
+          ],
+          "properties": {
+            "potion_contracts": {
+              "description": "potion contracts",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContractInfo"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "ContractInfo": {
+      "description": "code hash and address of a secret contract",
+      "type": "object",
+      "required": [
+        "address",
+        "code_hash"
+      ],
+      "properties": {
+        "address": {
+          "description": "contract's address",
+          "allOf": [
+            {
+              "$ref": "#/definitions/HumanAddr"
+            }
+          ]
+        },
+        "code_hash": {
+          "description": "contract's code hash string",
+          "type": "string"
+        }
+      }
+    },
+    "HumanAddr": {
+      "type": "string"
+    }
+  }
+}

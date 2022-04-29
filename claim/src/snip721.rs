@@ -30,15 +30,6 @@ pub struct Mint {
     pub memo: String,
 }
 
-/// the address and viewing key making an authenticated query request
-#[derive(Serialize, Deserialize, JsonSchema, Clone, PartialEq, Debug)]
-pub struct ViewerInfo {
-    /// querying address
-    pub address: HumanAddr,
-    /// authentication key string
-    pub viewing_key: String,
-}
-
 /// token metadata stripped down only to what is used by the claim contract
 #[derive(Serialize, Deserialize, JsonSchema, Clone, PartialEq, Debug, Default)]
 pub struct Metadata {

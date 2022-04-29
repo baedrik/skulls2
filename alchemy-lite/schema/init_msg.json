@@ -1,0 +1,192 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InitMsg",
+  "description": "Instantiation message",
+  "type": "object",
+  "required": [
+    "entropy",
+    "skulls_contract"
+  ],
+  "properties": {
+    "admins": {
+      "description": "admins in addition to the instantiator",
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "$ref": "#/definitions/HumanAddr"
+      }
+    },
+    "entropy": {
+      "description": "entropy used for prng seed",
+      "type": "string"
+    },
+    "potion": {
+      "description": "optional definition of a potion",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/PotionInfo"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "potion_contracts": {
+      "description": "optional list of potion contracts that might call",
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "$ref": "#/definitions/ContractInfo"
+      }
+    },
+    "skulls_contract": {
+      "description": "code hash and address of the skulls contract",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ContractInfo"
+        }
+      ]
+    },
+    "svg_servers": {
+      "description": "optional list of svg server contracts to set viewing key with",
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "$ref": "#/definitions/ContractInfo"
+      }
+    }
+  },
+  "definitions": {
+    "ContractInfo": {
+      "description": "code hash and address of a secret contract",
+      "type": "object",
+      "required": [
+        "address",
+        "code_hash"
+      ],
+      "properties": {
+        "address": {
+          "description": "contract's address",
+          "allOf": [
+            {
+              "$ref": "#/definitions/HumanAddr"
+            }
+          ]
+        },
+        "code_hash": {
+          "description": "contract's code hash string",
+          "type": "string"
+        }
+      }
+    },
+    "HumanAddr": {
+      "type": "string"
+    },
+    "LayerId": {
+      "description": "identifies a layer",
+      "type": "object",
+      "required": [
+        "category",
+        "variant"
+      ],
+      "properties": {
+        "category": {
+          "description": "the layer category name",
+          "type": "string"
+        },
+        "variant": {
+          "description": "the variant name",
+          "type": "string"
+        }
+      }
+    },
+    "PotionInfo": {
+      "description": "potion information",
+      "type": "object",
+      "required": [
+        "name",
+        "svg_server",
+        "variants"
+      ],
+      "properties": {
+        "name": {
+          "description": "potion name",
+          "type": "string"
+        },
+        "potion_contract": {
+          "description": "optional potion contract if this will be hosted by one not already added",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ContractInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "svg_server": {
+          "description": "svg server the potion uses",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ContractInfo"
+            }
+          ]
+        },
+        "variants": {
+          "description": "possible traits and their weights",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VariantInfo"
+          }
+        }
+      }
+    },
+    "VariantInfo": {
+      "description": "trait variant information",
+      "type": "object",
+      "required": [
+        "layers",
+        "normal_weight"
+      ],
+      "properties": {
+        "cyclops_weight": {
+          "description": "randomization weight for cyclops",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "jawless_weight": {
+          "description": "randomization weight for this variant if jawless",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "layers": {
+          "description": "layers that compose this variant",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LayerId"
+          }
+        },
+        "normal_weight": {
+          "description": "randomization weight for this trait variant if skull has 2 eyes and a jaw",
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
+        }
+      }
+    }
+  }
+}

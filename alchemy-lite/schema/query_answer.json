@@ -1,0 +1,275 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QueryAnswer",
+  "description": "responses to queries",
+  "anyOf": [
+    {
+      "description": "displays the admins list",
+      "type": "object",
+      "required": [
+        "admins"
+      ],
+      "properties": {
+        "admins": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "description": "current admin list",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "list of potion contracts",
+      "type": "object",
+      "required": [
+        "potion_contracts"
+      ],
+      "properties": {
+        "potion_contracts": {
+          "type": "object",
+          "required": [
+            "potion_contracts"
+          ],
+          "properties": {
+            "potion_contracts": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContractInfo"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "list of svg servers",
+      "type": "object",
+      "required": [
+        "svg_servers"
+      ],
+      "properties": {
+        "svg_servers": {
+          "type": "object",
+          "required": [
+            "svg_servers"
+          ],
+          "properties": {
+            "svg_servers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContractInfo"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "list potion names and indices",
+      "type": "object",
+      "required": [
+        "potions"
+      ],
+      "properties": {
+        "potions": {
+          "type": "object",
+          "required": [
+            "count",
+            "potions"
+          ],
+          "properties": {
+            "count": {
+              "description": "total count of potions",
+              "type": "integer",
+              "format": "uint16",
+              "minimum": 0.0
+            },
+            "potions": {
+              "description": "potions' names and indices",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PotionNameIdx"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "display the definition of a potion",
+      "type": "object",
+      "required": [
+        "potion_info"
+      ],
+      "properties": {
+        "potion_info": {
+          "type": "object",
+          "required": [
+            "potion"
+          ],
+          "properties": {
+            "potion": {
+              "$ref": "#/definitions/PotionInfo"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "ContractInfo": {
+      "description": "code hash and address of a secret contract",
+      "type": "object",
+      "required": [
+        "address",
+        "code_hash"
+      ],
+      "properties": {
+        "address": {
+          "description": "contract's address",
+          "allOf": [
+            {
+              "$ref": "#/definitions/HumanAddr"
+            }
+          ]
+        },
+        "code_hash": {
+          "description": "contract's code hash string",
+          "type": "string"
+        }
+      }
+    },
+    "HumanAddr": {
+      "type": "string"
+    },
+    "LayerId": {
+      "description": "identifies a layer",
+      "type": "object",
+      "required": [
+        "category",
+        "variant"
+      ],
+      "properties": {
+        "category": {
+          "description": "the layer category name",
+          "type": "string"
+        },
+        "variant": {
+          "description": "the variant name",
+          "type": "string"
+        }
+      }
+    },
+    "PotionInfo": {
+      "description": "potion information",
+      "type": "object",
+      "required": [
+        "name",
+        "svg_server",
+        "variants"
+      ],
+      "properties": {
+        "name": {
+          "description": "potion name",
+          "type": "string"
+        },
+        "potion_contract": {
+          "description": "optional potion contract if this will be hosted by one not already added",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ContractInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "svg_server": {
+          "description": "svg server the potion uses",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ContractInfo"
+            }
+          ]
+        },
+        "variants": {
+          "description": "possible traits and their weights",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VariantInfo"
+          }
+        }
+      }
+    },
+    "PotionNameIdx": {
+      "description": "potion name and index",
+      "type": "object",
+      "required": [
+        "index",
+        "name"
+      ],
+      "properties": {
+        "index": {
+          "description": "potion's index",
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "name": {
+          "description": "potion name",
+          "type": "string"
+        }
+      }
+    },
+    "VariantInfo": {
+      "description": "trait variant information",
+      "type": "object",
+      "required": [
+        "layers",
+        "normal_weight"
+      ],
+      "properties": {
+        "cyclops_weight": {
+          "description": "randomization weight for cyclops",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "jawless_weight": {
+          "description": "randomization weight for this variant if jawless",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "layers": {
+          "description": "layers that compose this variant",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LayerId"
+          }
+        },
+        "normal_weight": {
+          "description": "randomization weight for this trait variant if skull has 2 eyes and a jaw",
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
+        }
+      }
+    }
+  }
+}

@@ -4,6 +4,26 @@
   "description": "Handle messages",
   "anyOf": [
     {
+      "description": "adds a new potion or modifies an existing potion",
+      "type": "object",
+      "required": [
+        "set_potion"
+      ],
+      "properties": {
+        "set_potion": {
+          "type": "object",
+          "required": [
+            "potion"
+          ],
+          "properties": {
+            "potion": {
+              "$ref": "#/definitions/PotionInfo"
+            }
+          }
+        }
+      }
+    },
+    {
       "description": "add potion and/or svg server contracts",
       "type": "object",
       "required": [
@@ -382,6 +402,106 @@
     },
     "HumanAddr": {
       "type": "string"
+    },
+    "LayerId": {
+      "description": "identifies a layer",
+      "type": "object",
+      "required": [
+        "category",
+        "variant"
+      ],
+      "properties": {
+        "category": {
+          "description": "the layer category name",
+          "type": "string"
+        },
+        "variant": {
+          "description": "the variant name",
+          "type": "string"
+        }
+      }
+    },
+    "PotionInfo": {
+      "description": "potion information",
+      "type": "object",
+      "required": [
+        "name",
+        "svg_server",
+        "variants"
+      ],
+      "properties": {
+        "name": {
+          "description": "potion name",
+          "type": "string"
+        },
+        "potion_contract": {
+          "description": "optional potion contract if this will be hosted by one not already added",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ContractInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "svg_server": {
+          "description": "svg server the potion uses",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ContractInfo"
+            }
+          ]
+        },
+        "variants": {
+          "description": "possible traits and their weights",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VariantInfo"
+          }
+        }
+      }
+    },
+    "VariantInfo": {
+      "description": "trait variant information",
+      "type": "object",
+      "required": [
+        "layers",
+        "normal_weight"
+      ],
+      "properties": {
+        "cyclops_weight": {
+          "description": "randomization weight for cyclops",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "jawless_weight": {
+          "description": "randomization weight for this variant if jawless",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 0.0
+        },
+        "layers": {
+          "description": "layers that compose this variant",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LayerId"
+          }
+        },
+        "normal_weight": {
+          "description": "randomization weight for this trait variant if skull has 2 eyes and a jaw",
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
+        }
+      }
     }
   }
 }

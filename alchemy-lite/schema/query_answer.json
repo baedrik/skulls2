@@ -114,9 +114,14 @@
         "potion_info": {
           "type": "object",
           "required": [
+            "halted",
             "potion"
           ],
           "properties": {
+            "halted": {
+              "description": "true if the potion has been halted",
+              "type": "boolean"
+            },
             "potion": {
               "$ref": "#/definitions/PotionInfo"
             }

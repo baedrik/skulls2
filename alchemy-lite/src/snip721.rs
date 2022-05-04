@@ -23,7 +23,7 @@ impl HandleCallback for Snip721HandleMsg {
     const BLOCK_SIZE: usize = BLOCK_SIZE;
 }
 
-/// token metadata stripped down only to what is used by the claim contract
+/// token metadata stripped down only to what is used by potions
 #[derive(Serialize, Deserialize, JsonSchema, Clone, PartialEq, Debug, Default)]
 pub struct Metadata {
     /// optional on-chain metadata

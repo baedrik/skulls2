@@ -168,6 +168,34 @@
           }
         }
       }
+    },
+    {
+      "description": "response from adding/modifying a potion",
+      "type": "object",
+      "required": [
+        "set_potion"
+      ],
+      "properties": {
+        "set_potion": {
+          "type": "object",
+          "required": [
+            "count",
+            "updated_existing"
+          ],
+          "properties": {
+            "count": {
+              "description": "number of potions this contract processes",
+              "type": "integer",
+              "format": "uint16",
+              "minimum": 0.0
+            },
+            "updated_existing": {
+              "description": "true if updating an existing potion",
+              "type": "boolean"
+            }
+          }
+        }
+      }
     }
   ],
   "definitions": {

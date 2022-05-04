@@ -25,6 +25,8 @@ pub struct InitMsg {
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum HandleMsg {
+    /// adds a new potion or modifies an existing potion
+    SetPotion { potion: PotionInfo },
     /// add potion and/or svg server contracts
     AddContracts {
         /// optional potion contracts to add
@@ -142,6 +144,13 @@ pub enum HandleAnswer {
         /// potion contracts
         potion_contracts: Vec<ContractInfo>,
     },
+    /// response from adding/modifying a potion
+    SetPotion {
+        /// number of potions this contract processes
+        count: u16,
+        /// true if updating an existing potion
+        updated_existing: bool,
+    },
 }
 
 /// Queries
@@ -220,7 +229,11 @@ pub enum QueryAnswer {
         potions: Vec<PotionNameIdx>,
     },
     /// display the definition of a potion
-    PotionInfo { potion: PotionInfo },
+    PotionInfo {
+        /// true if the potion has been halted
+        halted: bool,
+        potion: PotionInfo,
+    },
 }
 
 /// the address and viewing key making an authenticated query request

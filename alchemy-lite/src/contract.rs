@@ -72,7 +72,7 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     };
     // add a potion if given
     let mut messages = if let Some(ptn) = msg.potion {
-        set_potion(deps, ptn, &mut state, &env.contract_code_hash)?.unwrap_or_else(Vec::new)
+        set_potion(deps, ptn, &mut state, &env.contract_code_hash)?
     } else {
         Vec::new()
     };
@@ -116,6 +116,7 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     msg: HandleMsg,
 ) -> HandleResult {
     let response = match msg {
+        HandleMsg::SetPotion { potion } => try_set_potion(deps, &env, potion),
         HandleMsg::AddContracts {
             potion_contracts,
             svg_servers,
@@ -180,16 +181,15 @@ fn try_set_halt<S: Storage, A: Api, Q: Querier>(
     // if only setting status for one potion
     if let Some(name) = potion.as_ref() {
         let idx_store = ReadonlyPrefixedStorage::new(PREFIX_POTION_IDX, &deps.storage);
-        if let Some(i) = may_load::<u16, _>(&idx_store, name.as_bytes())? {
-            let idx_key = i.to_le_bytes();
-            let mut ptn_store = PrefixedStorage::new(PREFIX_POTION, &mut deps.storage);
-            let mut potion: StoredPotionInfo = load(&ptn_store, &idx_key)?;
-            if potion.halt != halt {
-                potion.halt = halt;
-                save(&mut ptn_store, &idx_key, &potion)?;
-            }
-        } else {
-            return Err(StdError::generic_err(format!("No potion called {}", name)));
+        let i = may_load::<u16, _>(&idx_store, name.as_bytes())?
+            .ok_or_else(|| StdError::generic_err(format!("No potion called {}", name)))?;
+        let idx_key = i.to_le_bytes();
+        let mut ptn_store = PrefixedStorage::new(PREFIX_POTION, &mut deps.storage);
+        let mut potion = may_load::<StoredPotionInfo, _>(&ptn_store, &idx_key)?
+            .ok_or_else(|| StdError::generic_err("Potion storage is corrupt"))?;
+        if potion.halt != halt {
+            potion.halt = halt;
+            save(&mut ptn_store, &idx_key, &potion)?;
         }
     // setting status for the contract
     } else {
@@ -268,7 +268,8 @@ fn try_batch_receive_nft<S: Storage, A: Api, Q: Querier>(
             StdError::generic_err(format!("Unknown potion: {}", ptn_meta.extension.name))
         })?;
     let ptn_store = ReadonlyPrefixedStorage::new(PREFIX_POTION, &deps.storage);
-    let mut potion: StoredPotionInfo = load(&ptn_store, &ptn_idx.to_le_bytes())?;
+    let mut potion = may_load::<StoredPotionInfo, _>(&ptn_store, &ptn_idx.to_le_bytes())?
+        .ok_or_else(|| StdError::generic_err("Potion storage is corrupt"))?;
     if potion.halt {
         return Err(StdError::generic_err(format!(
             "Alchemy for potion: {} has been halted",
@@ -674,6 +675,41 @@ fn try_add_admins<S: Storage, A: Api, Q: Querier>(
 
 /// Returns HandleResult
 ///
+/// adds/updates a potion's info
+///
+/// # Arguments
+///
+/// * `deps` - mutable reference to Extern containing all the contract's external dependencies
+/// * `env` - a reference to the Env of contract's environment
+/// * `potion` - the new/updated PotionInfo
+fn try_set_potion<S: Storage, A: Api, Q: Querier>(
+    deps: &mut Extern<S, A, Q>,
+    env: &Env,
+    potion: PotionInfo,
+) -> HandleResult {
+    // only allow admins to do this
+    let admins: Vec<CanonicalAddr> = load(&deps.storage, ADMINS_KEY)?;
+    let sender_raw = deps.api.canonical_address(&env.message.sender)?;
+    if !admins.contains(&sender_raw) {
+        return Err(StdError::unauthorized());
+    }
+    let mut state: State = load(&deps.storage, STATE_KEY)?;
+    let old_cnt = state.potion_cnt;
+    let messages = set_potion(deps, potion, &mut state, &env.contract_code_hash)?;
+    save(&mut deps.storage, STATE_KEY, &state)?;
+
+    Ok(HandleResponse {
+        messages,
+        log: vec![],
+        data: Some(to_binary(&HandleAnswer::SetPotion {
+            count: state.potion_cnt,
+            updated_existing: state.potion_cnt == old_cnt,
+        })?),
+    })
+}
+
+/// Returns HandleResult
+///
 /// creates a viewing key
 ///
 /// # Arguments
@@ -898,7 +934,7 @@ fn query_potion<S: Storage, A: Api, Q: Querier>(
     } else if let Some(nm) = name {
         let idx_store = ReadonlyPrefixedStorage::new(PREFIX_POTION_IDX, &deps.storage);
         may_load::<u16, _>(&idx_store, nm.as_bytes())?
-            .ok_or_else(|| StdError::generic_err("Potion index storage is corrupt"))?
+            .ok_or_else(|| StdError::generic_err(format!("No potion with name: {}", nm)))?
     } else {
         return Err(StdError::generic_err(
             "The potion name or index must be provided",
@@ -918,7 +954,10 @@ fn query_potion<S: Storage, A: Api, Q: Querier>(
         variants: stored.variants,
     };
 
-    to_binary(&QueryAnswer::PotionInfo { potion })
+    to_binary(&QueryAnswer::PotionInfo {
+        halted: stored.halt,
+        potion,
+    })
 }
 
 /// Returns StdResult<(CanonicalAddr, Option<CanonicalAddr>)> from determining the querying address
@@ -1015,7 +1054,7 @@ fn add_admins<A: Api>(
     Ok(save_it)
 }
 
-/// Returns StdResult<Option<Vec<CosmosMsg>>> after adding/modifying potion data
+/// Returns StdResult<Vec<CosmosMsg>> after adding/modifying potion data
 ///
 /// # Arguments
 ///
@@ -1028,7 +1067,7 @@ fn set_potion<S: Storage, A: Api, Q: Querier>(
     potion: PotionInfo,
     state: &mut State,
     code_hash: &str,
-) -> StdResult<Option<Vec<CosmosMsg>>> {
+) -> StdResult<Vec<CosmosMsg>> {
     let name_key = potion.name.as_bytes();
     let mut idx_store = PrefixedStorage::new(PREFIX_POTION_IDX, &mut deps.storage);
     let idx = if let Some(i) = may_load::<u16, _>(&idx_store, name_key)? {
@@ -1042,7 +1081,6 @@ fn set_potion<S: Storage, A: Api, Q: Querier>(
         i
     };
     let idx_key = idx.to_le_bytes();
-
     // store the potion contract if needed
     let mut msgs = if let Some(contract) = potion.potion_contract {
         add_ptn_contrs(deps, state, vec![contract], code_hash)?
@@ -1077,8 +1115,7 @@ fn set_potion<S: Storage, A: Api, Q: Querier>(
     };
     let mut ptn_store = PrefixedStorage::new(PREFIX_POTION, &mut deps.storage);
     save(&mut ptn_store, &idx_key, &store_ptn)?;
-    let rtn = if msgs.is_empty() { None } else { Some(msgs) };
-    Ok(rtn)
+    Ok(msgs)
 }
 
 /// Returns StdResult<Vec<CosmosMsg>> after adding potion contracts and registering with them

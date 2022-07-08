@@ -17,7 +17,7 @@
               "description": "optional permit used to verify admin identity.  If both viewer and permit are provided, the viewer will be ignored",
               "anyOf": [
                 {
-                  "$ref": "#/definitions/Permit"
+                  "$ref": "#/definitions/Permit_for_TokenPermissions"
                 },
                 {
                   "type": "null"
@@ -53,7 +53,7 @@
               "description": "optional permit used to verify admin identity.  If both viewer and permit are provided, the viewer will be ignored",
               "anyOf": [
                 {
-                  "$ref": "#/definitions/Permit"
+                  "$ref": "#/definitions/Permit_for_TokenPermissions"
                 },
                 {
                   "type": "null"
@@ -89,7 +89,7 @@
               "description": "optional permit used to verify admin identity.  If both viewer and permit are provided, the viewer will be ignored",
               "anyOf": [
                 {
-                  "$ref": "#/definitions/Permit"
+                  "$ref": "#/definitions/Permit_for_TokenPermissions"
                 },
                 {
                   "type": "null"
@@ -143,7 +143,7 @@
               "description": "optional permit used to verify admin identity.  If both viewer and permit are provided, the viewer will be ignored",
               "anyOf": [
                 {
-                  "$ref": "#/definitions/Permit"
+                  "$ref": "#/definitions/Permit_for_TokenPermissions"
                 },
                 {
                   "type": "null"
@@ -195,7 +195,7 @@
               "description": "optional permit used to verify admin identity.  If both viewer and permit are provided, the viewer will be ignored",
               "anyOf": [
                 {
-                  "$ref": "#/definitions/Permit"
+                  "$ref": "#/definitions/Permit_for_TokenPermissions"
                 },
                 {
                   "type": "null"
@@ -226,31 +226,7 @@
     "HumanAddr": {
       "type": "string"
     },
-    "Permission": {
-      "type": "string",
-      "enum": [
-        "allowance",
-        "balance",
-        "history",
-        "owner"
-      ]
-    },
-    "Permit": {
-      "type": "object",
-      "required": [
-        "params",
-        "signature"
-      ],
-      "properties": {
-        "params": {
-          "$ref": "#/definitions/PermitParams"
-        },
-        "signature": {
-          "$ref": "#/definitions/PermitSignature"
-        }
-      }
-    },
-    "PermitParams": {
+    "PermitParams_for_TokenPermissions": {
       "type": "object",
       "required": [
         "allowed_tokens",
@@ -271,7 +247,7 @@
         "permissions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Permission"
+            "$ref": "#/definitions/TokenPermissions"
           }
         },
         "permit_name": {
@@ -291,6 +267,21 @@
         },
         "signature": {
           "$ref": "#/definitions/Binary"
+        }
+      }
+    },
+    "Permit_for_TokenPermissions": {
+      "type": "object",
+      "required": [
+        "params",
+        "signature"
+      ],
+      "properties": {
+        "params": {
+          "$ref": "#/definitions/PermitParams_for_TokenPermissions"
+        },
+        "signature": {
+          "$ref": "#/definitions/PermitSignature"
         }
       }
     },
@@ -314,6 +305,15 @@
           ]
         }
       }
+    },
+    "TokenPermissions": {
+      "type": "string",
+      "enum": [
+        "allowance",
+        "balance",
+        "history",
+        "owner"
+      ]
     },
     "ViewerInfo": {
       "description": "the address and viewing key making an authenticated query request",

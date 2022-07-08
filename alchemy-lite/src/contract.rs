@@ -979,13 +979,14 @@ fn get_querier<S: Storage, A: Api, Q: Querier>(
         let me_raw: CanonicalAddr = may_load(&deps.storage, MY_ADDRESS_KEY)?
             .ok_or_else(|| StdError::generic_err("Minter contract address storage is corrupt"))?;
         let my_address = deps.api.human_address(&me_raw)?;
-        let querier = deps.api.canonical_address(&validate(
+        let querier = deps.api.canonical_address(&HumanAddr(validate(
             deps,
             PREFIX_REVOKED_PERMITS,
             &pmt,
             my_address,
-        )?)?;
-        if !pmt.check_permission(&secret_toolkit::permit::Permission::Owner) {
+            Some("secret"),
+        )?))?;
+        if !pmt.check_permission(&secret_toolkit::permit::TokenPermissions::Owner) {
             return Err(StdError::generic_err(format!(
                 "Owner permission is required for queries, got permissions {:?}",
                 pmt.params.permissions

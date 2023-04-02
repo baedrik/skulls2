@@ -1,0 +1,801 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HandleMsg",
+  "description": "Handle messages",
+  "anyOf": [
+    {
+      "description": "Create a viewing key",
+      "type": "object",
+      "required": [
+        "create_viewing_key"
+      ],
+      "properties": {
+        "create_viewing_key": {
+          "type": "object",
+          "required": [
+            "entropy"
+          ],
+          "properties": {
+            "entropy": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Set a viewing key",
+      "type": "object",
+      "required": [
+        "set_viewing_key"
+      ],
+      "properties": {
+        "set_viewing_key": {
+          "type": "object",
+          "required": [
+            "key"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "padding": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "allows an admin to add more admins",
+      "type": "object",
+      "required": [
+        "add_admins"
+      ],
+      "properties": {
+        "add_admins": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "description": "list of address to grant admin priveleges",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "allows an admin to remove admin addresses",
+      "type": "object",
+      "required": [
+        "remove_admins"
+      ],
+      "properties": {
+        "remove_admins": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "description": "list of address to revoke admin priveleges from",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "allows an admin to add more viewers",
+      "type": "object",
+      "required": [
+        "add_viewers"
+      ],
+      "properties": {
+        "add_viewers": {
+          "type": "object",
+          "required": [
+            "viewers"
+          ],
+          "properties": {
+            "viewers": {
+              "description": "list of new addresses with viewing priveleges",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "allows an admin to remove viewer addresses",
+      "type": "object",
+      "required": [
+        "remove_viewers"
+      ],
+      "properties": {
+        "remove_viewers": {
+          "type": "object",
+          "required": [
+            "viewers"
+          ],
+          "properties": {
+            "viewers": {
+              "description": "list of address to revoke viewing priveleges from",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "allows an admin to add minters",
+      "type": "object",
+      "required": [
+        "add_minters"
+      ],
+      "properties": {
+        "add_minters": {
+          "type": "object",
+          "required": [
+            "minters"
+          ],
+          "properties": {
+            "minters": {
+              "description": "list of new addresses with viewing priveleges",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "allows an admin to remove minter addresses",
+      "type": "object",
+      "required": [
+        "remove_minters"
+      ],
+      "properties": {
+        "remove_minters": {
+          "type": "object",
+          "required": [
+            "minters"
+          ],
+          "properties": {
+            "minters": {
+              "description": "list of address to revoke viewing priveleges from",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "add new trait categories",
+      "type": "object",
+      "required": [
+        "add_categories"
+      ],
+      "properties": {
+        "add_categories": {
+          "type": "object",
+          "required": [
+            "categories"
+          ],
+          "properties": {
+            "categories": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CategoryInfo"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "add new trait variants to existing categories",
+      "type": "object",
+      "required": [
+        "add_variants"
+      ],
+      "properties": {
+        "add_variants": {
+          "type": "object",
+          "required": [
+            "variants"
+          ],
+          "properties": {
+            "variants": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AddVariantInfo"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "change the name or skip status for an existing trait category",
+      "type": "object",
+      "required": [
+        "modify_category"
+      ],
+      "properties": {
+        "modify_category": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "description": "name of the trait category to modify",
+              "type": "string"
+            },
+            "new_name": {
+              "description": "optional new name for the trait category",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "new_skip": {
+              "description": "optional new skip status (true if this category is never rolled)",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "modify existing trait variants",
+      "type": "object",
+      "required": [
+        "modify_variants"
+      ],
+      "properties": {
+        "modify_variants": {
+          "type": "object",
+          "required": [
+            "modifications"
+          ],
+          "properties": {
+            "modifications": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/VariantModInfo"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "set the common metadata for the collection",
+      "type": "object",
+      "required": [
+        "set_metadata"
+      ],
+      "properties": {
+        "set_metadata": {
+          "type": "object",
+          "properties": {
+            "private_metadata": {
+              "description": "common private metadata",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Metadata"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "public_metadata": {
+              "description": "common public metadata",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Metadata"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "add dependencies for traits that have multiple layers",
+      "type": "object",
+      "required": [
+        "add_dependencies"
+      ],
+      "properties": {
+        "add_dependencies": {
+          "type": "object",
+          "required": [
+            "dependencies"
+          ],
+          "properties": {
+            "dependencies": {
+              "description": "new dependencies to add",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Dependencies"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "remove dependecies from trait variants",
+      "type": "object",
+      "required": [
+        "remove_dependencies"
+      ],
+      "properties": {
+        "remove_dependencies": {
+          "type": "object",
+          "required": [
+            "dependencies"
+          ],
+          "properties": {
+            "dependencies": {
+              "description": "dependencies to remove",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Dependencies"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "modify dependencies of a trait variant",
+      "type": "object",
+      "required": [
+        "modify_dependencies"
+      ],
+      "properties": {
+        "modify_dependencies": {
+          "type": "object",
+          "required": [
+            "dependencies"
+          ],
+          "properties": {
+            "dependencies": {
+              "description": "dependencies to modify",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Dependencies"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "disallow the use of a permit",
+      "type": "object",
+      "required": [
+        "revoke_permit"
+      ],
+      "properties": {
+        "revoke_permit": {
+          "type": "object",
+          "required": [
+            "permit_name"
+          ],
+          "properties": {
+            "permit_name": {
+              "description": "name of the permit that is no longer valid",
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "AddVariantInfo": {
+      "description": "information for adding variants",
+      "type": "object",
+      "required": [
+        "category_name",
+        "variants"
+      ],
+      "properties": {
+        "category_name": {
+          "description": "trait category name",
+          "type": "string"
+        },
+        "variants": {
+          "description": "new variants for this category",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VariantInfo"
+          }
+        }
+      }
+    },
+    "Authentication": {
+      "description": "media file authentication",
+      "type": "object",
+      "properties": {
+        "key": {
+          "description": "either a decryption key for encrypted files or a password for basic authentication",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "user": {
+          "description": "username used in basic authentication",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "CategoryInfo": {
+      "description": "trait category information",
+      "type": "object",
+      "required": [
+        "name",
+        "skip",
+        "variants"
+      ],
+      "properties": {
+        "name": {
+          "description": "trait category name",
+          "type": "string"
+        },
+        "skip": {
+          "description": "true if this category is skipped when rolling",
+          "type": "boolean"
+        },
+        "variants": {
+          "description": "variants for this category",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VariantInfo"
+          }
+        }
+      }
+    },
+    "Dependencies": {
+      "description": "describes a trait that has multiple layers",
+      "type": "object",
+      "required": [
+        "correlated",
+        "id"
+      ],
+      "properties": {
+        "correlated": {
+          "description": "the other layers that are correlated to this variant",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LayerId"
+          }
+        },
+        "id": {
+          "description": "id of the layer variant that has dependencies",
+          "allOf": [
+            {
+              "$ref": "#/definitions/LayerId"
+            }
+          ]
+        }
+      }
+    },
+    "Extension": {
+      "description": "metadata extension You can add any metadata fields you need here.  These fields are based on https://docs.opensea.io/docs/metadata-standards and are the metadata fields that Stashh uses for robust NFT display.  Urls should be prefixed with `http://`, `https://`, `ipfs://`, or `ar://`",
+      "type": "object",
+      "properties": {
+        "animation_url": {
+          "description": "url to a multimedia attachment",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "attributes": {
+          "description": "item attributes",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Trait"
+          }
+        },
+        "background_color": {
+          "description": "background color represented as a six-character hexadecimal without a pre-pended #",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "description": "item description",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "external_url": {
+          "description": "url to allow users to view the item on your site",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image": {
+          "description": "url to the image",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image_data": {
+          "description": "raw SVG image data (not recommended). Only use this if you're not including the image parameter",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "media": {
+          "description": "media files as specified on Stashh that allows for basic authenticatiion and decryption keys. Most of the above is used for bridging public eth NFT metadata easily, whereas `media` will be used when minting NFTs on Stashh",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/MediaFile"
+          }
+        },
+        "name": {
+          "description": "name of the item",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "protected_attributes": {
+          "description": "a select list of trait_types that are in the private metadata.  This will only ever be used in public metadata",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "youtube_url": {
+          "description": "url to a YouTube video",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "HumanAddr": {
+      "type": "string"
+    },
+    "LayerId": {
+      "description": "identifies a layer",
+      "type": "object",
+      "required": [
+        "category",
+        "variant"
+      ],
+      "properties": {
+        "category": {
+          "description": "the layer category name",
+          "type": "string"
+        },
+        "variant": {
+          "description": "the variant name",
+          "type": "string"
+        }
+      }
+    },
+    "MediaFile": {
+      "description": "media file",
+      "type": "object",
+      "required": [
+        "url"
+      ],
+      "properties": {
+        "authentication": {
+          "description": "authentication information",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Authentication"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extension": {
+          "description": "file extension",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "file_type": {
+          "description": "file type Stashh currently uses: \"image\", \"video\", \"audio\", \"text\", \"font\", \"application\"",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "description": "url to the file.  Urls should be prefixed with `http://`, `https://`, `ipfs://`, or `ar://`",
+          "type": "string"
+        }
+      }
+    },
+    "Metadata": {
+      "description": "token metadata",
+      "type": "object",
+      "properties": {
+        "extension": {
+          "description": "optional on-chain metadata.  Only use this if you are not using `token_uri`",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Extension"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "token_uri": {
+          "description": "optional uri for off-chain metadata.  This should be prefixed with `http://`, `https://`, `ipfs://`, or `ar://`.  Only use this if you are not using `extension`",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Trait": {
+      "description": "attribute trait",
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "display_type": {
+          "description": "indicates how a trait should be displayed",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max_value": {
+          "description": "optional max value for numerical traits",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "trait_type": {
+          "description": "name of the trait",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "description": "trait value",
+          "type": "string"
+        }
+      }
+    },
+    "VariantInfo": {
+      "description": "trait variant information",
+      "type": "object",
+      "required": [
+        "display_name",
+        "name"
+      ],
+      "properties": {
+        "display_name": {
+          "description": "display name of the trait variant",
+          "type": "string"
+        },
+        "name": {
+          "description": "trait variant name",
+          "type": "string"
+        },
+        "svg": {
+          "description": "svg data if name is not `None`",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "VariantModInfo": {
+      "description": "info needed to call ModifyVariants",
+      "type": "object",
+      "required": [
+        "category",
+        "modifications"
+      ],
+      "properties": {
+        "category": {
+          "description": "trait category name",
+          "type": "string"
+        },
+        "modifications": {
+          "description": "modifications to make to variants in this category",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VariantModification"
+          }
+        }
+      }
+    },
+    "VariantModification": {
+      "description": "info needed to modify trait variants",
+      "type": "object",
+      "required": [
+        "modified_variant",
+        "name"
+      ],
+      "properties": {
+        "modified_variant": {
+          "description": "new variant data (may include a variant name change)",
+          "allOf": [
+            {
+              "$ref": "#/definitions/VariantInfo"
+            }
+          ]
+        },
+        "name": {
+          "description": "(old) trait variant name",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

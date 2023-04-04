@@ -1,0 +1,239 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HandleMsg",
+  "description": "Handle messages",
+  "anyOf": [
+    {
+      "description": "Create a viewing key",
+      "type": "object",
+      "required": [
+        "create_viewing_key"
+      ],
+      "properties": {
+        "create_viewing_key": {
+          "type": "object",
+          "required": [
+            "entropy"
+          ],
+          "properties": {
+            "entropy": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "Set a viewing key",
+      "type": "object",
+      "required": [
+        "set_viewing_key"
+      ],
+      "properties": {
+        "set_viewing_key": {
+          "type": "object",
+          "required": [
+            "key"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "padding": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "allows an admin to add more admins",
+      "type": "object",
+      "required": [
+        "add_admins"
+      ],
+      "properties": {
+        "add_admins": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "description": "list of address to grant admin priveleges",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "allows an admin to remove admin addresses",
+      "type": "object",
+      "required": [
+        "remove_admins"
+      ],
+      "properties": {
+        "remove_admins": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "description": "list of address to revoke admin priveleges from",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "halt/start rewinds",
+      "type": "object",
+      "required": [
+        "set_rewind_status"
+      ],
+      "properties": {
+        "set_rewind_status": {
+          "type": "object",
+          "required": [
+            "halt"
+          ],
+          "properties": {
+            "halt": {
+              "description": "true if rewind should be halted",
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "set cooldown period",
+      "type": "object",
+      "required": [
+        "set_cooldown"
+      ],
+      "properties": {
+        "set_cooldown": {
+          "type": "object",
+          "required": [
+            "cooldown"
+          ],
+          "properties": {
+            "cooldown": {
+              "description": "new cooldown period for rewind",
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "attempt to rewind a skull's trait(s)",
+      "type": "object",
+      "required": [
+        "rewind"
+      ],
+      "properties": {
+        "rewind": {
+          "type": "object",
+          "required": [
+            "token_id"
+          ],
+          "properties": {
+            "token_id": {
+              "description": "token id of the skull",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "set the viewing key with an svg server contract",
+      "type": "object",
+      "required": [
+        "set_key_with_server"
+      ],
+      "properties": {
+        "set_key_with_server": {
+          "type": "object",
+          "required": [
+            "svg_server"
+          ],
+          "properties": {
+            "svg_server": {
+              "description": "svg server code hash and address",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/ContractInfo"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "disallow the use of a permit",
+      "type": "object",
+      "required": [
+        "revoke_permit"
+      ],
+      "properties": {
+        "revoke_permit": {
+          "type": "object",
+          "required": [
+            "permit_name"
+          ],
+          "properties": {
+            "permit_name": {
+              "description": "name of the permit that is no longer valid",
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "ContractInfo": {
+      "description": "code hash and address of a secret contract",
+      "type": "object",
+      "required": [
+        "address",
+        "code_hash"
+      ],
+      "properties": {
+        "address": {
+          "description": "contract's address",
+          "allOf": [
+            {
+              "$ref": "#/definitions/HumanAddr"
+            }
+          ]
+        },
+        "code_hash": {
+          "description": "contract's code hash string",
+          "type": "string"
+        }
+      }
+    },
+    "HumanAddr": {
+      "type": "string"
+    }
+  }
+}

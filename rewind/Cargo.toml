@@ -1,5 +1,5 @@
 [package]
-name = "moss-svg-server"
+name = "moss-rewind"
 version = "0.1.0"
 authors = ["bill wincer"]
 edition = "2018"
@@ -40,7 +40,7 @@ schemars = "0.7"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 serde-json-wasm = "0.2.1"
 snafu = { version = "0.6.3" }
-secret-toolkit = { version = "0.3", default-features = false, features = ["permit", "utils"] }
+secret-toolkit = { version = "0.3", default-features = false, features = ["permit", "utils", "snip20"] }
 subtle = { version = "2.2.3", default-features = false }
 sha2 = { version = "0.9.1", default-features = false }
 base64 = "0.12.3"
@@ -50,7 +50,7 @@ rand_core = { version =  "0.5.1", default-features = false }
 rand = "0.7.3"
 primitive-types = { version = "0.9.0", default-features = false }
 
-#[dependencies.serde_with]
-#version = "1.11.0"
+[dependencies.serde_with]
+version = "1.11.0"
 [dev-dependencies]
 cosmwasm-schema = "0.10.1"

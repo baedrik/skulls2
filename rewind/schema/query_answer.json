@@ -1,0 +1,168 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QueryAnswer",
+  "description": "responses to queries",
+  "anyOf": [
+    {
+      "description": "displays the admins list",
+      "type": "object",
+      "required": [
+        "admins"
+      ],
+      "properties": {
+        "admins": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "description": "current admin list",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HumanAddr"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "displays the rewind status",
+      "type": "object",
+      "required": [
+        "rewind_status"
+      ],
+      "properties": {
+        "rewind_status": {
+          "type": "object",
+          "required": [
+            "rewind_has_halted"
+          ],
+          "properties": {
+            "rewind_has_halted": {
+              "description": "true if rewind has halted",
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "displays cooldown period",
+      "type": "object",
+      "required": [
+        "cooldown"
+      ],
+      "properties": {
+        "cooldown": {
+          "type": "object",
+          "required": [
+            "cooldown"
+          ],
+          "properties": {
+            "cooldown": {
+              "description": "cooldown period for rewinds",
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "displays the nft contract information",
+      "type": "object",
+      "required": [
+        "nft_contract"
+      ],
+      "properties": {
+        "nft_contract": {
+          "type": "object",
+          "required": [
+            "nft_contract"
+          ],
+          "properties": {
+            "nft_contract": {
+              "$ref": "#/definitions/ContractInfo"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "displays times of last rewind",
+      "type": "object",
+      "required": [
+        "last_rewind_times"
+      ],
+      "properties": {
+        "last_rewind_times": {
+          "type": "object",
+          "required": [
+            "last_rewinds"
+          ],
+          "properties": {
+            "last_rewinds": {
+              "description": "list of last rewind times",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TokenTime"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "ContractInfo": {
+      "description": "code hash and address of a secret contract",
+      "type": "object",
+      "required": [
+        "address",
+        "code_hash"
+      ],
+      "properties": {
+        "address": {
+          "description": "contract's address",
+          "allOf": [
+            {
+              "$ref": "#/definitions/HumanAddr"
+            }
+          ]
+        },
+        "code_hash": {
+          "description": "contract's code hash string",
+          "type": "string"
+        }
+      }
+    },
+    "HumanAddr": {
+      "type": "string"
+    },
+    "TokenTime": {
+      "description": "timestamps associated with tokens",
+      "type": "object",
+      "required": [
+        "token_id"
+      ],
+      "properties": {
+        "timestamp": {
+          "description": "optional timestamp in seconds since 01/01/1970",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "token_id": {
+          "description": "token the timestamp corresponds to",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

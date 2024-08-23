@@ -1,4 +1,4 @@
-use cosmwasm_std::{ReadonlyStorage, StdError, StdResult, Storage};
+use cosmwasm_std::{StdError, StdResult, Storage};
 use serde::{de::DeserializeOwned, Serialize};
 use std::any::type_name;
 
@@ -9,7 +9,7 @@ use std::any::type_name;
 /// * `storage` - a mutable reference to the storage this item should go to
 /// * `key` - a byte slice representing the key to access the stored item
 /// * `value` - a reference to the item to store
-pub fn save<T: Serialize, S: Storage>(storage: &mut S, key: &[u8], value: &T) -> StdResult<()> {
+pub fn save<T: Serialize>(storage: &mut dyn Storage, key: &[u8], value: &T) -> StdResult<()> {
     storage.set(
         key,
         &bincode2::serialize(value).map_err(|e| StdError::serialize_err(type_name::<T>(), e))?,
@@ -23,7 +23,7 @@ pub fn save<T: Serialize, S: Storage>(storage: &mut S, key: &[u8], value: &T) ->
 ///
 /// * `storage` - a mutable reference to the storage this item is in
 /// * `key` - a byte slice representing the key that accesses the stored item
-pub fn remove<S: Storage>(storage: &mut S, key: &[u8]) {
+pub fn remove(storage: &mut dyn Storage, key: &[u8]) {
     storage.remove(key);
 }
 
@@ -34,7 +34,7 @@ pub fn remove<S: Storage>(storage: &mut S, key: &[u8]) {
 ///
 /// * `storage` - a reference to the storage this item is in
 /// * `key` - a byte slice representing the key that accesses the stored item
-pub fn load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, key: &[u8]) -> StdResult<T> {
+pub fn load<T: DeserializeOwned>(storage: &dyn Storage, key: &[u8]) -> StdResult<T> {
     bincode2::deserialize(
         &storage
             .get(key)
@@ -50,10 +50,7 @@ pub fn load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, key: &[u8]) ->
 ///
 /// * `storage` - a reference to the storage this item is in
 /// * `key` - a byte slice representing the key that accesses the stored item
-pub fn may_load<T: DeserializeOwned, S: ReadonlyStorage>(
-    storage: &S,
-    key: &[u8],
-) -> StdResult<Option<T>> {
+pub fn may_load<T: DeserializeOwned>(storage: &dyn Storage, key: &[u8]) -> StdResult<Option<T>> {
     match storage.get(key) {
         Some(value) => bincode2::deserialize(&value)
             .map_err(|e| StdError::parse_err(type_name::<T>(), e))

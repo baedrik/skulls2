@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "HandleMsg",
+  "title": "ExecuteMsg",
   "description": "Handle messages",
-  "anyOf": [
+  "oneOf": [
     {
       "description": "Create a viewing key",
       "type": "object",
@@ -21,7 +21,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "Set a viewing key",
@@ -47,7 +48,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "allows an admin to add more admins",
@@ -66,12 +68,13 @@
               "description": "list of address to grant admin priveleges",
               "type": "array",
               "items": {
-                "$ref": "#/definitions/HumanAddr"
+                "type": "string"
               }
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "allows an admin to remove admin addresses",
@@ -90,12 +93,13 @@
               "description": "list of address to revoke admin priveleges from",
               "type": "array",
               "items": {
-                "$ref": "#/definitions/HumanAddr"
+                "type": "string"
               }
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "allows an admin to add more viewers",
@@ -114,12 +118,13 @@
               "description": "list of new addresses with viewing priveleges",
               "type": "array",
               "items": {
-                "$ref": "#/definitions/HumanAddr"
+                "type": "string"
               }
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "allows an admin to remove viewer addresses",
@@ -138,12 +143,13 @@
               "description": "list of address to revoke viewing priveleges from",
               "type": "array",
               "items": {
-                "$ref": "#/definitions/HumanAddr"
+                "type": "string"
               }
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "allows an admin to add minters",
@@ -162,12 +168,13 @@
               "description": "list of new addresses with viewing priveleges",
               "type": "array",
               "items": {
-                "$ref": "#/definitions/HumanAddr"
+                "type": "string"
               }
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "allows an admin to remove minter addresses",
@@ -186,12 +193,13 @@
               "description": "list of address to revoke viewing priveleges from",
               "type": "array",
               "items": {
-                "$ref": "#/definitions/HumanAddr"
+                "type": "string"
               }
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "add new trait categories",
@@ -214,7 +222,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "add new trait variants to existing categories",
@@ -237,7 +246,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "change the name or skip status for an existing trait category",
@@ -272,7 +282,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "modify existing trait variants",
@@ -295,7 +306,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "set the common metadata for the collection",
@@ -331,7 +343,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "add dependencies for traits that have multiple layers",
@@ -355,7 +368,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "remove dependecies from trait variants",
@@ -379,7 +393,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "modify dependencies of a trait variant",
@@ -403,7 +418,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "disallow the use of a permit",
@@ -424,7 +440,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     }
   ],
   "definitions": {
@@ -611,9 +628,6 @@
           ]
         }
       }
-    },
-    "HumanAddr": {
-      "type": "string"
     },
     "LayerId": {
       "description": "identifies a layer",

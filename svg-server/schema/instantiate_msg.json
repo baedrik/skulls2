@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "InitMsg",
+  "title": "InstantiateMsg",
   "description": "Instantiation message",
   "type": "object",
   "required": [
@@ -14,16 +14,11 @@
         "null"
       ],
       "items": {
-        "$ref": "#/definitions/HumanAddr"
+        "type": "string"
       }
     },
     "entropy": {
       "description": "entropy used for prng seed",
-      "type": "string"
-    }
-  },
-  "definitions": {
-    "HumanAddr": {
       "type": "string"
     }
   }

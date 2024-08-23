@@ -6,10 +6,6 @@ pub const ADMINS_KEY: &[u8] = b"admin";
 pub const VIEWERS_KEY: &[u8] = b"vwers";
 /// storage key for the minters list
 pub const MINTERS_KEY: &[u8] = b"mntrs";
-/// storage key for this server's address
-pub const MY_ADDRESS_KEY: &[u8] = b"myaddr";
-/// storage key for prng seed
-pub const PRNG_SEED_KEY: &[u8] = b"prngseed";
 /// storage key for the State
 pub const STATE_KEY: &[u8] = b"state";
 /// storage key for the variant dependencies
@@ -24,8 +20,6 @@ pub const PREFIX_VARIANT_MAP: &[u8] = b"vrntmap";
 pub const PREFIX_CATEGORY: &[u8] = b"category";
 /// prefix for the storage of category variants
 pub const PREFIX_VARIANT: &[u8] = b"variant";
-/// prefix for storage of viewing keys
-pub const PREFIX_VIEW_KEY: &[u8] = b"viewkey";
 /// prefix for the storage of revoked permits
 pub const PREFIX_REVOKED_PERMITS: &str = "revoke";
 

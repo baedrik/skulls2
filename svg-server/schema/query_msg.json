@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "QueryMsg",
   "description": "Queries",
-  "anyOf": [
+  "oneOf": [
     {
       "description": "displays the category count and which ones are skipped when rolling",
       "type": "object",
@@ -37,7 +37,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "lists the authorized addresses for this server",
@@ -73,7 +74,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "displays a trait category",
@@ -150,7 +152,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "displays a layer variant",
@@ -215,7 +218,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "displays the common metadata",
@@ -251,7 +255,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "displays the trait variants with dependencies (multiple layers)",
@@ -305,7 +310,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "generates metadata from the input image vector",
@@ -353,7 +359,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "display info that achemy/reveal contracts will need",
@@ -378,7 +385,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "display if a skull is a cyclops and if it is jawless",
@@ -413,7 +421,8 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     {
       "description": "return the new image vec resulting from altering the specified layers",
@@ -456,15 +465,39 @@
             }
           }
         }
-      }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "display the StoredLayerId for jawless and cyclops",
+      "type": "object",
+      "required": [
+        "skull_type_layer_ids"
+      ],
+      "properties": {
+        "skull_type_layer_ids": {
+          "type": "object",
+          "required": [
+            "viewer"
+          ],
+          "properties": {
+            "viewer": {
+              "description": "address and viewing key of the alchemy contract",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/ViewerInfo"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
     }
   ],
   "definitions": {
     "Binary": {
-      "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>",
-      "type": "string"
-    },
-    "HumanAddr": {
+      "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
       "type": "string"
     },
     "LayerId": {
@@ -497,7 +530,7 @@
         "allowed_tokens": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/HumanAddr"
+            "type": "string"
           }
         },
         "chain_id": {
@@ -587,12 +620,35 @@
       }
     },
     "TokenPermissions": {
-      "type": "string",
-      "enum": [
-        "allowance",
-        "balance",
-        "history",
-        "owner"
+      "oneOf": [
+        {
+          "description": "Allowance for SNIP-20 - Permission to query allowance of the owner & spender",
+          "type": "string",
+          "enum": [
+            "allowance"
+          ]
+        },
+        {
+          "description": "Balance for SNIP-20 - Permission to query balance",
+          "type": "string",
+          "enum": [
+            "balance"
+          ]
+        },
+        {
+          "description": "History for SNIP-20 - Permission to query transfer_history & transaction_hisotry",
+          "type": "string",
+          "enum": [
+            "history"
+          ]
+        },
+        {
+          "description": "Owner permission indicates that the bearer of this permit should be granted all the access of the creator/signer of the permit.  SNIP-721 uses this to grant viewing access to all data that the permit creator owns and is whitelisted for. For SNIP-721 use, a permit with Owner permission should NEVER be given to anyone else.  If someone wants to share private data, they should whitelist the address they want to share with via a SetWhitelistedApproval tx, and that address will view the data by creating their own permit with Owner permission",
+          "type": "string",
+          "enum": [
+            "owner"
+          ]
+        }
       ]
     },
     "ViewerInfo": {
@@ -605,11 +661,7 @@
       "properties": {
         "address": {
           "description": "querying address",
-          "allOf": [
-            {
-              "$ref": "#/definitions/HumanAddr"
-            }
-          ]
+          "type": "string"
         },
         "viewing_key": {
           "description": "authentication key string",

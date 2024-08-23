@@ -1,10 +1,9 @@
-#![allow(clippy::large_enum_variant)]
 use crate::metadata::Metadata;
 use crate::state::{
     Category, PREFIX_CATEGORY, PREFIX_CATEGORY_MAP, PREFIX_VARIANT, PREFIX_VARIANT_MAP,
 };
 use crate::storage::may_load;
-use cosmwasm_std::{HumanAddr, ReadonlyStorage, StdError, StdResult};
+use cosmwasm_std::{Addr, StdError, StdResult, Storage};
 use cosmwasm_storage::ReadonlyPrefixedStorage;
 use schemars::JsonSchema;
 use secret_toolkit::permit::Permit;
@@ -12,9 +11,9 @@ use serde::{Deserialize, Serialize};
 
 /// Instantiation message
 #[derive(Serialize, Deserialize, JsonSchema)]
-pub struct InitMsg {
+pub struct InstantiateMsg {
     /// optional addresses to add as admins in addition to the instantiator
-    pub admins: Option<Vec<HumanAddr>>,
+    pub admins: Option<Vec<String>>,
     /// entropy used for prng seed
     pub entropy: String,
 }
@@ -22,7 +21,7 @@ pub struct InitMsg {
 /// Handle messages
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum HandleMsg {
+pub enum ExecuteMsg {
     /// Create a viewing key
     CreateViewingKey { entropy: String },
     /// Set a viewing key
@@ -34,32 +33,32 @@ pub enum HandleMsg {
     /// allows an admin to add more admins
     AddAdmins {
         /// list of address to grant admin priveleges
-        admins: Vec<HumanAddr>,
+        admins: Vec<String>,
     },
     /// allows an admin to remove admin addresses
     RemoveAdmins {
         /// list of address to revoke admin priveleges from
-        admins: Vec<HumanAddr>,
+        admins: Vec<String>,
     },
     /// allows an admin to add more viewers
     AddViewers {
         /// list of new addresses with viewing priveleges
-        viewers: Vec<HumanAddr>,
+        viewers: Vec<String>,
     },
     /// allows an admin to remove viewer addresses
     RemoveViewers {
         /// list of address to revoke viewing priveleges from
-        viewers: Vec<HumanAddr>,
+        viewers: Vec<String>,
     },
     /// allows an admin to add minters
     AddMinters {
         /// list of new addresses with viewing priveleges
-        minters: Vec<HumanAddr>,
+        minters: Vec<String>,
     },
     /// allows an admin to remove minter addresses
     RemoveMinters {
         /// list of address to revoke viewing priveleges from
-        minters: Vec<HumanAddr>,
+        minters: Vec<String>,
     },
     /// add new trait categories
     AddCategories { categories: Vec<CategoryInfo> },
@@ -108,23 +107,23 @@ pub enum HandleMsg {
 /// Responses from handle functions
 #[derive(Serialize, Deserialize, Debug, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum HandleAnswer {
+pub enum ExecuteAnswer {
     /// response from creating a viewing key
     ViewingKey { key: String },
     /// response from adding/removing admins
     AdminsList {
         // current admins
-        admins: Vec<HumanAddr>,
+        admins: Vec<Addr>,
     },
     /// response from adding/removing viewers
     ViewersList {
         // current viewers
-        viewers: Vec<HumanAddr>,
+        viewers: Vec<Addr>,
     },
     /// response from adding/removing minters
     MintersList {
         // current operators
-        minters: Vec<HumanAddr>,
+        minters: Vec<Addr>,
     },
     /// response from adding new trait categories
     AddCategories {
@@ -252,6 +251,11 @@ pub enum QueryMsg {
         /// transmuted layers
         new_layers: Vec<LayerId>,
     },
+    /// display the StoredLayerId for jawless and cyclops
+    SkullTypeLayerIds {
+        /// address and viewing key of the alchemy contract
+        viewer: ViewerInfo,
+    },
 }
 
 /// responses to queries
@@ -260,9 +264,9 @@ pub enum QueryMsg {
 pub enum QueryAnswer {
     /// response listing the current authorized addresses
     AuthorizedAddresses {
-        admins: Vec<HumanAddr>,
-        minters: Vec<HumanAddr>,
-        viewers: Vec<HumanAddr>,
+        admins: Vec<Addr>,
+        minters: Vec<Addr>,
+        viewers: Vec<Addr>,
     },
     /// display a trait category
     Category {
@@ -324,6 +328,13 @@ pub enum QueryAnswer {
     Transmute {
         /// new image
         image: Vec<u8>,
+    },
+    /// display the StoredLayerId for jawless and cyclops
+    SkullTypeLayerIds {
+        /// cyclops layer
+        cyclops: StoredLayerId,
+        /// jawless layer
+        jawless: StoredLayerId,
     },
 }
 
@@ -391,7 +402,7 @@ pub struct VariantModification {
 #[derive(Serialize, Deserialize, JsonSchema, Clone, PartialEq, Eq, Debug)]
 pub struct ViewerInfo {
     /// querying address
-    pub address: HumanAddr,
+    pub address: String,
     /// authentication key string
     pub viewing_key: String,
 }
@@ -411,7 +422,7 @@ impl Dependencies {
     /// # Arguments
     ///
     /// * `storage` - a reference to the contract storage
-    pub fn to_stored<S: ReadonlyStorage>(&self, storage: &S) -> StdResult<StoredDependencies> {
+    pub fn to_stored(&self, storage: &dyn Storage) -> StdResult<StoredDependencies> {
         Ok(StoredDependencies {
             id: self.id.to_stored(storage)?,
             correlated: self
@@ -438,14 +449,14 @@ impl LayerId {
     /// # Arguments
     ///
     /// * `storage` - a reference to the contract storage
-    pub fn to_stored<S: ReadonlyStorage>(&self, storage: &S) -> StdResult<StoredLayerId> {
-        let cat_map = ReadonlyPrefixedStorage::new(PREFIX_CATEGORY_MAP, storage);
+    pub fn to_stored(&self, storage: &dyn Storage) -> StdResult<StoredLayerId> {
+        let cat_map = ReadonlyPrefixedStorage::new(storage, PREFIX_CATEGORY_MAP);
         let cat_idx: u8 = may_load(&cat_map, self.category.as_bytes())?.ok_or_else(|| {
             StdError::generic_err(format!("Category name:  {} does not exist", &self.category))
         })?;
         let var_map = ReadonlyPrefixedStorage::multilevel(
-            &[PREFIX_VARIANT_MAP, &cat_idx.to_le_bytes()],
             storage,
+            &[PREFIX_VARIANT_MAP, &cat_idx.to_le_bytes()],
         );
         let var_idx: u8 = may_load(&var_map, self.variant.as_bytes())?.ok_or_else(|| {
             StdError::generic_err(format!(
@@ -475,12 +486,12 @@ impl StoredLayerId {
     /// # Arguments
     ///
     /// * `storage` - a reference to the contract storage
-    pub fn to_display<S: ReadonlyStorage>(&self, storage: &S) -> StdResult<LayerId> {
-        let cat_store = ReadonlyPrefixedStorage::new(PREFIX_CATEGORY, storage);
+    pub fn to_display(&self, storage: &dyn Storage) -> StdResult<LayerId> {
+        let cat_store = ReadonlyPrefixedStorage::new(storage, PREFIX_CATEGORY);
         let cat_key = self.category.to_le_bytes();
         let cat: Category = may_load(&cat_store, &cat_key)?
             .ok_or_else(|| StdError::generic_err("Category storage is corrupt"))?;
-        let var_store = ReadonlyPrefixedStorage::multilevel(&[PREFIX_VARIANT, &cat_key], storage);
+        let var_store = ReadonlyPrefixedStorage::multilevel(storage, &[PREFIX_VARIANT, &cat_key]);
         let var: VariantInfo = may_load(&var_store, &self.variant.to_le_bytes())?
             .ok_or_else(|| StdError::generic_err("Variant storage is corrupt"))?;
         Ok(LayerId {
@@ -514,7 +525,7 @@ impl StoredDependencies {
     /// # Arguments
     ///
     /// * `storage` - a reference to the contract storage
-    pub fn to_display<S: ReadonlyStorage>(&self, storage: &S) -> StdResult<Dependencies> {
+    pub fn to_display(&self, storage: &dyn Storage) -> StdResult<Dependencies> {
         Ok(Dependencies {
             id: self.id.to_display(storage)?,
             correlated: self

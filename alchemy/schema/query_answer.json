@@ -1,0 +1,599 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QueryAnswer",
+  "description": "responses to queries",
+  "oneOf": [
+    {
+      "description": "displays if the user and token list are eligible for a first time staking bonus",
+      "type": "object",
+      "required": [
+        "tokens_eligible_for_bonus"
+      ],
+      "properties": {
+        "tokens_eligible_for_bonus": {
+          "type": "object",
+          "required": [
+            "token_eligibility",
+            "user_is_eligible"
+          ],
+          "properties": {
+            "token_eligibility": {
+              "description": "eligibility statuses for the requested tokens",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/EligibilityInfo"
+              }
+            },
+            "user_is_eligible": {
+              "description": "true if the user is eligible for the first time staking bonus",
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays if the user is eligible for a first time staking bonus",
+      "type": "object",
+      "required": [
+        "user_eligible_for_bonus"
+      ],
+      "properties": {
+        "user_eligible_for_bonus": {
+          "type": "object",
+          "required": [
+            "is_eligible"
+          ],
+          "properties": {
+            "is_eligible": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays the halt statuses for staking and alchemy",
+      "type": "object",
+      "required": [
+        "halt_statuses"
+      ],
+      "properties": {
+        "halt_statuses": {
+          "type": "object",
+          "required": [
+            "alchemy_is_halted",
+            "staking_is_halted"
+          ],
+          "properties": {
+            "alchemy_is_halted": {
+              "description": "true if alchemy has been halted",
+              "type": "boolean"
+            },
+            "staking_is_halted": {
+              "description": "true if staking has been halted",
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "response listing the current admins",
+      "type": "object",
+      "required": [
+        "admins"
+      ],
+      "properties": {
+        "admins": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Addr"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays the staking and alchemy states",
+      "type": "object",
+      "required": [
+        "states"
+      ],
+      "properties": {
+        "states": {
+          "type": "object",
+          "required": [
+            "alchemy_state",
+            "staking_state"
+          ],
+          "properties": {
+            "alchemy_state": {
+              "$ref": "#/definitions/AlchemyState"
+            },
+            "staking_state": {
+              "$ref": "#/definitions/StakingState"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays the code hashes and addresses of used contracts",
+      "type": "object",
+      "required": [
+        "contracts"
+      ],
+      "properties": {
+        "contracts": {
+          "type": "object",
+          "required": [
+            "crate_contracts",
+            "skulls_contract",
+            "svg_server"
+          ],
+          "properties": {
+            "crate_contracts": {
+              "description": "crate contracts",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContractInfo"
+              }
+            },
+            "skulls_contract": {
+              "description": "code hash and address of the skulls contract",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/ContractInfo"
+                }
+              ]
+            },
+            "svg_server": {
+              "description": "code hash and address of the svg server",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/ContractInfo"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays the ingredients",
+      "type": "object",
+      "required": [
+        "ingredients"
+      ],
+      "properties": {
+        "ingredients": {
+          "type": "object",
+          "required": [
+            "ingredients"
+          ],
+          "properties": {
+            "ingredients": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays info about the skulls currently staked by the user and the ingredients they have in inventory",
+      "type": "object",
+      "required": [
+        "my_staking"
+      ],
+      "properties": {
+        "my_staking": {
+          "type": "object",
+          "required": [
+            "charge_infos",
+            "first_stake_bonus_available",
+            "inventory",
+            "staking_is_halted"
+          ],
+          "properties": {
+            "charge_infos": {
+              "description": "charge info of the skulls currently staking",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ChargeInfo"
+              }
+            },
+            "first_stake_bonus_available": {
+              "description": "true if the user is eligible for the first staking bonus",
+              "type": "boolean"
+            },
+            "inventory": {
+              "description": "user's ingredient inventory",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IngredientQty"
+              }
+            },
+            "staking_is_halted": {
+              "description": "true if staking is halted (so getting empty arrays for charges)",
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "only displays a user's ingredients inventory (less intensive than MyStaking if you only need the inventory because it doesn't have to call the skulls contract to verify ownership of multiple skulls)",
+      "type": "object",
+      "required": [
+        "my_ingredients"
+      ],
+      "properties": {
+        "my_ingredients": {
+          "type": "object",
+          "required": [
+            "inventory"
+          ],
+          "properties": {
+            "inventory": {
+              "description": "user's ingredient inventory",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IngredientQty"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays the skull materials and indices",
+      "type": "object",
+      "required": [
+        "materials"
+      ],
+      "properties": {
+        "materials": {
+          "type": "object",
+          "required": [
+            "materials"
+          ],
+          "properties": {
+            "materials": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/VariantIdxName"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays the ingredient sets",
+      "type": "object",
+      "required": [
+        "ingredient_sets"
+      ],
+      "properties": {
+        "ingredient_sets": {
+          "type": "object",
+          "required": [
+            "ingredient_sets"
+          ],
+          "properties": {
+            "ingredient_sets": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IngredientSet"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays the staking table for a specified skull material",
+      "type": "object",
+      "required": [
+        "staking_table"
+      ],
+      "properties": {
+        "staking_table": {
+          "type": "object",
+          "required": [
+            "staking_table"
+          ],
+          "properties": {
+            "staking_table": {
+              "$ref": "#/definitions/StakingTable"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "definitions": {
+    "Addr": {
+      "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+      "type": "string"
+    },
+    "AlchemyState": {
+      "description": "info about alchemy state",
+      "type": "object",
+      "required": [
+        "cyclops",
+        "halt",
+        "jawless"
+      ],
+      "properties": {
+        "cyclops": {
+          "description": "StoredLayerId for cyclops",
+          "allOf": [
+            {
+              "$ref": "#/definitions/StoredLayerId"
+            }
+          ]
+        },
+        "halt": {
+          "description": "true if alchemy is halted",
+          "type": "boolean"
+        },
+        "jawless": {
+          "description": "StoredLayerId for jawless",
+          "allOf": [
+            {
+              "$ref": "#/definitions/StoredLayerId"
+            }
+          ]
+        }
+      }
+    },
+    "ChargeInfo": {
+      "description": "a skull's token id and info about its accrued charges",
+      "type": "object",
+      "required": [
+        "charge_start",
+        "charges",
+        "token_id"
+      ],
+      "properties": {
+        "charge_start": {
+          "description": "timestamp for beginning of unclaimed charge",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "charges": {
+          "description": "whole number of charges accrued since charge_start (game cap at 4)",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "token_id": {
+          "description": "token id fo the skull",
+          "type": "string"
+        }
+      }
+    },
+    "ContractInfo": {
+      "description": "code hash and address of a secret contract",
+      "type": "object",
+      "required": [
+        "address",
+        "code_hash"
+      ],
+      "properties": {
+        "address": {
+          "description": "contract's address",
+          "type": "string"
+        },
+        "code_hash": {
+          "description": "contract's code hash string",
+          "type": "string"
+        }
+      }
+    },
+    "EligibilityInfo": {
+      "description": "first time staking bonus eligibility for a token",
+      "type": "object",
+      "required": [
+        "token_id"
+      ],
+      "properties": {
+        "claimed_at": {
+          "description": "if token is owned by the user AND it is not eligible, the time it was last claimed",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "is_eligible": {
+          "description": "if token is owned by the user, true if the token is eligible for the bonus",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "token_id": {
+          "description": "token id",
+          "type": "string"
+        }
+      }
+    },
+    "IngrSetWeight": {
+      "description": "ingredient sets and their staking weight",
+      "type": "object",
+      "required": [
+        "ingredient_set",
+        "weight"
+      ],
+      "properties": {
+        "ingredient_set": {
+          "description": "name of the set",
+          "type": "string"
+        },
+        "weight": {
+          "description": "weight",
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
+        }
+      }
+    },
+    "IngredientQty": {
+      "description": "an ingredient and its quantity",
+      "type": "object",
+      "required": [
+        "ingredient",
+        "quantity"
+      ],
+      "properties": {
+        "ingredient": {
+          "description": "name of the ingredient",
+          "type": "string"
+        },
+        "quantity": {
+          "description": "quantity of this ingredient",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "IngredientSet": {
+      "description": "set of ingredients for the staking tables",
+      "type": "object",
+      "required": [
+        "members",
+        "name"
+      ],
+      "properties": {
+        "members": {
+          "description": "list of ingredients in this set",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "description": "name of the set",
+          "type": "string"
+        }
+      }
+    },
+    "StakingState": {
+      "description": "info about staking state",
+      "type": "object",
+      "required": [
+        "cooldown",
+        "halt",
+        "skull_idx"
+      ],
+      "properties": {
+        "cooldown": {
+          "description": "cooldown period",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "halt": {
+          "description": "true if staking is halted",
+          "type": "boolean"
+        },
+        "skull_idx": {
+          "description": "skull category index",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "StakingTable": {
+      "description": "staking chances of ingredient sets and their weights for a specified skull material",
+      "type": "object",
+      "required": [
+        "ingredient_set_weights",
+        "material"
+      ],
+      "properties": {
+        "ingredient_set_weights": {
+          "description": "ingredient sets and their weights",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IngrSetWeight"
+          }
+        },
+        "material": {
+          "description": "skull material that uses this table",
+          "type": "string"
+        }
+      }
+    },
+    "StoredLayerId": {
+      "description": "identifies a layer by indices",
+      "type": "object",
+      "required": [
+        "category",
+        "variant"
+      ],
+      "properties": {
+        "category": {
+          "description": "the layer category",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "variant": {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        }
+      }
+    },
+    "VariantIdxName": {
+      "description": "a variant's index and display name",
+      "type": "object",
+      "required": [
+        "idx",
+        "name"
+      ],
+      "properties": {
+        "idx": {
+          "description": "index of the variant",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "name": {
+          "description": "display name of the variant",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

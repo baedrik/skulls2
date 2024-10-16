@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InstantiateMsg",
+  "description": "Instantiation message",
+  "type": "object",
+  "required": [
+    "charge_time",
+    "crate_contract",
+    "entropy",
+    "skulls_contract",
+    "svg_server"
+  ],
+  "properties": {
+    "admins": {
+      "description": "optional addresses to add as admins in addition to the instantiator",
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "charge_time": {
+      "description": "number of seconds to earn a staking charge (604800 for prod)",
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0.0
+    },
+    "crate_contract": {
+      "description": "code hash and address of a crate contract",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ContractInfo"
+        }
+      ]
+    },
+    "entropy": {
+      "description": "entropy used for prng seed",
+      "type": "string"
+    },
+    "skulls_contract": {
+      "description": "code hash and address of the skulls contract",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ContractInfo"
+        }
+      ]
+    },
+    "svg_server": {
+      "description": "code hash and address of the svg server",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ContractInfo"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "ContractInfo": {
+      "description": "code hash and address of a secret contract",
+      "type": "object",
+      "required": [
+        "address",
+        "code_hash"
+      ],
+      "properties": {
+        "address": {
+          "description": "contract's address",
+          "type": "string"
+        },
+        "code_hash": {
+          "description": "contract's code hash string",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

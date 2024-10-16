@@ -251,8 +251,8 @@ pub enum QueryMsg {
         /// transmuted layers
         new_layers: Vec<LayerId>,
     },
-    /// display the StoredLayerId for jawless and cyclops
-    SkullTypeLayerIds {
+    /// display the StoredLayerId for jawless and cyclops, and the info about skull materials
+    SkullTypePlus {
         /// address and viewing key of the alchemy contract
         viewer: ViewerInfo,
     },
@@ -329,12 +329,16 @@ pub enum QueryAnswer {
         /// new image
         image: Vec<u8>,
     },
-    /// display the StoredLayerId for jawless and cyclops
-    SkullTypeLayerIds {
+    /// display the StoredLayerId for jawless and cyclops, and the info about skull materials
+    SkullTypePlus {
         /// cyclops layer
         cyclops: StoredLayerId,
         /// jawless layer
         jawless: StoredLayerId,
+        /// skull category index
+        skull_idx: u8,
+        /// list of all skull materials
+        skull_variants: Vec<VariantIdxName>,
     },
 }
 
@@ -535,4 +539,13 @@ impl StoredDependencies {
                 .collect::<StdResult<Vec<LayerId>>>()?,
         })
     }
+}
+
+/// a variant's index and display name
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct VariantIdxName {
+    /// index of the variant
+    pub idx: u8,
+    /// display name of the variant
+    pub name: String,
 }

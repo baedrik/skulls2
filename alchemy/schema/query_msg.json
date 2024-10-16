@@ -4,13 +4,26 @@
   "description": "Queries",
   "oneOf": [
     {
-      "description": "displays the category count and which ones are skipped when rolling",
+      "description": "displays the halt statuses for staking and alchemy",
       "type": "object",
       "required": [
-        "state"
+        "halt_statuses"
       ],
       "properties": {
-        "state": {
+        "halt_statuses": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays the staking and alchemy states",
+      "type": "object",
+      "required": [
+        "states"
+      ],
+      "properties": {
+        "states": {
           "type": "object",
           "properties": {
             "permit": {
@@ -41,13 +54,13 @@
       "additionalProperties": false
     },
     {
-      "description": "lists the authorized addresses for this server",
+      "description": "lists the admin addresses",
       "type": "object",
       "required": [
-        "authorized_addresses"
+        "admins"
       ],
       "properties": {
-        "authorized_addresses": {
+        "admins": {
           "type": "object",
           "properties": {
             "permit": {
@@ -78,24 +91,293 @@
       "additionalProperties": false
     },
     {
-      "description": "displays a trait category",
+      "description": "displays the code hashes and addresses of used contracts",
       "type": "object",
       "required": [
-        "category"
+        "contracts"
       ],
       "properties": {
-        "category": {
+        "contracts": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "only displays a user's ingredients inventory (less intensive than MyStaking if you only need the inventory because it doesn't have to call the skulls contract to verify ownership of multiple skulls)",
+      "type": "object",
+      "required": [
+        "my_ingredients"
+      ],
+      "properties": {
+        "my_ingredients": {
           "type": "object",
           "properties": {
-            "display_svg": {
-              "description": "optionally true if svgs should be displayed.  Defaults to false",
-              "type": [
-                "boolean",
-                "null"
+            "permit": {
+              "description": "optional permit used to verify user identity.  If both viewer and permit are provided, the viewer will be ignored",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Permit_for_TokenPermissions"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
-            "index": {
-              "description": "optional category index to display",
+            "viewer": {
+              "description": "optional address and viewing key of a user",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ViewerInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays info about the skulls currently staked by the user and the ingredients they have in inventory",
+      "type": "object",
+      "required": [
+        "my_staking"
+      ],
+      "properties": {
+        "my_staking": {
+          "type": "object",
+          "properties": {
+            "permit": {
+              "description": "optional permit used to verify user identity.  If both viewer and permit are provided, the viewer will be ignored",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Permit_for_TokenPermissions"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "viewer": {
+              "description": "optional address and viewing key of a user",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ViewerInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays if the user is eligible for a first time staking bonus",
+      "type": "object",
+      "required": [
+        "user_eligible_for_bonus"
+      ],
+      "properties": {
+        "user_eligible_for_bonus": {
+          "type": "object",
+          "properties": {
+            "permit": {
+              "description": "optional permit used to verify user identity.  If both viewer and permit are provided, the viewer will be ignored",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Permit_for_TokenPermissions"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "viewer": {
+              "description": "optional address and viewing key of a user",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ViewerInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays if the user and token list are eligible for a first time staking bonus",
+      "type": "object",
+      "required": [
+        "tokens_eligible_for_bonus"
+      ],
+      "properties": {
+        "tokens_eligible_for_bonus": {
+          "type": "object",
+          "required": [
+            "token_ids"
+          ],
+          "properties": {
+            "permit": {
+              "description": "optional permit used to verify user identity.  If both viewer and permit are provided, the viewer will be ignored",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Permit_for_TokenPermissions"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "token_ids": {
+              "description": "list of token ids to check",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "viewer": {
+              "description": "optional address and viewing key of a user",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ViewerInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays the skull materials and indices",
+      "type": "object",
+      "required": [
+        "materials"
+      ],
+      "properties": {
+        "materials": {
+          "type": "object",
+          "properties": {
+            "permit": {
+              "description": "optional permit used to verify admin identity.  If both viewer and permit are provided, the viewer will be ignored",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Permit_for_TokenPermissions"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "viewer": {
+              "description": "optional address and viewing key of an admin",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ViewerInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays the ingredients",
+      "type": "object",
+      "required": [
+        "ingredients"
+      ],
+      "properties": {
+        "ingredients": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays the ingredient sets",
+      "type": "object",
+      "required": [
+        "ingredient_sets"
+      ],
+      "properties": {
+        "ingredient_sets": {
+          "type": "object",
+          "properties": {
+            "page": {
+              "description": "optional page number to display.  Defaults to 0 (first page) if not provided",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "minimum": 0.0
+            },
+            "page_size": {
+              "description": "optional limit to the number of ingredient sets to show.  Defaults to 30 if not specified",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "minimum": 0.0
+            },
+            "permit": {
+              "description": "optional permit used to verify admin identity.  If both viewer and permit are provided, the viewer will be ignored",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Permit_for_TokenPermissions"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "viewer": {
+              "description": "optional address and viewing key of an admin",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ViewerInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "displays the staking table for a specified skull material",
+      "type": "object",
+      "required": [
+        "staking_table"
+      ],
+      "properties": {
+        "staking_table": {
+          "type": "object",
+          "properties": {
+            "by_index": {
+              "description": "optionally display by the material index",
               "type": [
                 "integer",
                 "null"
@@ -103,17 +385,8 @@
               "format": "uint8",
               "minimum": 0.0
             },
-            "limit": {
-              "description": "max number of variants to display",
-              "type": [
-                "integer",
-                "null"
-              ],
-              "format": "uint8",
-              "minimum": 0.0
-            },
-            "name": {
-              "description": "optional category name to display",
+            "by_name": {
+              "description": "optionally display by the material name",
               "type": [
                 "string",
                 "null"
@@ -130,15 +403,6 @@
                 }
               ]
             },
-            "start_at": {
-              "description": "optional trait variant index to start at",
-              "type": [
-                "integer",
-                "null"
-              ],
-              "format": "uint8",
-              "minimum": 0.0
-            },
             "viewer": {
               "description": "optional address and viewing key of an admin",
               "anyOf": [
@@ -147,345 +411,6 @@
                 },
                 {
                   "type": "null"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "displays a layer variant",
-      "type": "object",
-      "required": [
-        "variant"
-      ],
-      "properties": {
-        "variant": {
-          "type": "object",
-          "properties": {
-            "by_index": {
-              "description": "optionally display by the category and variant indices",
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/StoredLayerId"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "by_name": {
-              "description": "optionally display by the category and variant names",
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/LayerId"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "display_svg": {
-              "description": "optionally true if svgs should be displayed.  Defaults to false",
-              "type": [
-                "boolean",
-                "null"
-              ]
-            },
-            "permit": {
-              "description": "optional permit used to verify admin identity.  If both viewer and permit are provided, the viewer will be ignored",
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/Permit_for_TokenPermissions"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "viewer": {
-              "description": "optional address and viewing key of an admin",
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/ViewerInfo"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "displays the common metadata",
-      "type": "object",
-      "required": [
-        "common_metadata"
-      ],
-      "properties": {
-        "common_metadata": {
-          "type": "object",
-          "properties": {
-            "permit": {
-              "description": "optional permit used to verify identity.  If both viewer and permit are provided, the viewer will be ignored",
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/Permit_for_TokenPermissions"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "viewer": {
-              "description": "optional address and viewing key of an admin, minter, or viewer",
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/ViewerInfo"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "displays the trait variants with dependencies (multiple layers)",
-      "type": "object",
-      "required": [
-        "dependencies"
-      ],
-      "properties": {
-        "dependencies": {
-          "type": "object",
-          "properties": {
-            "limit": {
-              "description": "max number of dependencies to display",
-              "type": [
-                "integer",
-                "null"
-              ],
-              "format": "uint16",
-              "minimum": 0.0
-            },
-            "permit": {
-              "description": "optional permit used to verify admin identity.  If both viewer and permit are provided, the viewer will be ignored",
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/Permit_for_TokenPermissions"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "start_at": {
-              "description": "optional dependency index to start at",
-              "type": [
-                "integer",
-                "null"
-              ],
-              "format": "uint16",
-              "minimum": 0.0
-            },
-            "viewer": {
-              "description": "optional address and viewing key of an admin",
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/ViewerInfo"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "generates metadata from the input image vector",
-      "type": "object",
-      "required": [
-        "token_metadata"
-      ],
-      "properties": {
-        "token_metadata": {
-          "type": "object",
-          "required": [
-            "image"
-          ],
-          "properties": {
-            "image": {
-              "description": "image indices",
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "uint8",
-                "minimum": 0.0
-              }
-            },
-            "permit": {
-              "description": "optional permit used to verify admin identity.  If both viewer and permit are provided, the viewer will be ignored",
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/Permit_for_TokenPermissions"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "viewer": {
-              "description": "optional address and viewing key of an admin, minter or viewer",
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/ViewerInfo"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "display info that achemy/reveal contracts will need",
-      "type": "object",
-      "required": [
-        "serve_alchemy"
-      ],
-      "properties": {
-        "serve_alchemy": {
-          "type": "object",
-          "required": [
-            "viewer"
-          ],
-          "properties": {
-            "viewer": {
-              "description": "address and viewing key of a reveal contract",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/ViewerInfo"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "display if a skull is a cyclops and if it is jawless",
-      "type": "object",
-      "required": [
-        "skull_type"
-      ],
-      "properties": {
-        "skull_type": {
-          "type": "object",
-          "required": [
-            "image",
-            "viewer"
-          ],
-          "properties": {
-            "image": {
-              "description": "image indices",
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "uint8",
-                "minimum": 0.0
-              }
-            },
-            "viewer": {
-              "description": "address and viewing key of the alchemy contract",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/ViewerInfo"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "return the new image vec resulting from altering the specified layers",
-      "type": "object",
-      "required": [
-        "transmute"
-      ],
-      "properties": {
-        "transmute": {
-          "type": "object",
-          "required": [
-            "current",
-            "new_layers",
-            "viewer"
-          ],
-          "properties": {
-            "current": {
-              "description": "current image indices",
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "uint8",
-                "minimum": 0.0
-              }
-            },
-            "new_layers": {
-              "description": "transmuted layers",
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/LayerId"
-              }
-            },
-            "viewer": {
-              "description": "address and viewing key of the alchemy contract",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/ViewerInfo"
-                }
-              ]
-            }
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "display the StoredLayerId for jawless and cyclops, and the info about skull materials",
-      "type": "object",
-      "required": [
-        "skull_type_plus"
-      ],
-      "properties": {
-        "skull_type_plus": {
-          "type": "object",
-          "required": [
-            "viewer"
-          ],
-          "properties": {
-            "viewer": {
-              "description": "address and viewing key of the alchemy contract",
-              "allOf": [
-                {
-                  "$ref": "#/definitions/ViewerInfo"
                 }
               ]
             }
@@ -499,24 +424,6 @@
     "Binary": {
       "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
       "type": "string"
-    },
-    "LayerId": {
-      "description": "identifies a layer",
-      "type": "object",
-      "required": [
-        "category",
-        "variant"
-      ],
-      "properties": {
-        "category": {
-          "description": "the layer category name",
-          "type": "string"
-        },
-        "variant": {
-          "description": "the variant name",
-          "type": "string"
-        }
-      }
     },
     "PermitParams_for_TokenPermissions": {
       "type": "object",
@@ -595,27 +502,6 @@
               "$ref": "#/definitions/Binary"
             }
           ]
-        }
-      }
-    },
-    "StoredLayerId": {
-      "description": "identifies a layer",
-      "type": "object",
-      "required": [
-        "category",
-        "variant"
-      ],
-      "properties": {
-        "category": {
-          "description": "the layer category",
-          "type": "integer",
-          "format": "uint8",
-          "minimum": 0.0
-        },
-        "variant": {
-          "type": "integer",
-          "format": "uint8",
-          "minimum": 0.0
         }
       }
     },

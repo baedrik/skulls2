@@ -16,8 +16,8 @@ use secret_toolkit::{
 use crate::metadata::{Metadata, Trait};
 use crate::msg::{
     AddVariantInfo, CategoryInfo, CommonMetadata, Dependencies, ExecuteAnswer, ExecuteMsg,
-    InstantiateMsg, LayerId, QueryAnswer, QueryMsg, StoredDependencies, StoredLayerId, VariantInfo,
-    VariantInfoPlus, VariantModInfo, ViewerInfo,
+    InstantiateMsg, LayerId, QueryAnswer, QueryMsg, StoredDependencies, StoredLayerId,
+    VariantIdxName, VariantInfo, VariantInfoPlus, VariantModInfo, ViewerInfo,
 };
 use crate::state::{
     Category, State, ADMINS_KEY, DEPENDENCIES_KEY, METADATA_KEY, MINTERS_KEY, PREFIX_CATEGORY,
@@ -583,7 +583,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         } => query_token_metadata(deps, viewer, permit, &image, &env.contract.address),
         QueryMsg::ServeAlchemy { viewer } => query_serve_alchemy(deps, viewer),
         QueryMsg::SkullType { viewer, image } => query_skull_type(deps, viewer, &image),
-        QueryMsg::SkullTypeLayerIds { viewer } => query_type_layers(deps, viewer),
+        QueryMsg::SkullTypePlus { viewer } => query_type_plus(deps, viewer),
         QueryMsg::Transmute {
             viewer,
             current,
@@ -672,16 +672,44 @@ fn query_skull_type(deps: Deps, viewer: ViewerInfo, image: &[u8]) -> StdResult<B
 }
 
 /// Returns StdResult<Binary> which displays the StoredLayerIds for cyclops and jawless
+/// and displays all skull materials and their indices
 ///
 /// # Arguments
 ///
 /// * `deps` - reference to Extern containing all the contract's external dependencies
 /// * `viewer` - address and key making an authenticated query request
-fn query_type_layers(deps: Deps, viewer: ViewerInfo) -> StdResult<Binary> {
+fn query_type_plus(deps: Deps, viewer: ViewerInfo) -> StdResult<Binary> {
     // only allow viewers to call this
     check_viewer(deps, viewer)?;
+    // get cyclops and jawless layers
     let (cyclops, jawless) = get_type_layers(deps.storage)?;
-    to_binary(&QueryAnswer::SkullTypeLayerIds { cyclops, jawless })
+    // get the skull index
+    let cat_map = ReadonlyPrefixedStorage::new(deps.storage, PREFIX_CATEGORY_MAP);
+    let skull_idx: u8 = may_load(&cat_map, "Skull".as_bytes())?
+        .ok_or_else(|| StdError::generic_err("Skull layer category not found"))?;
+    let skull_key = skull_idx.to_le_bytes();
+    // get the skull category
+    let cat_store = ReadonlyPrefixedStorage::new(deps.storage, PREFIX_CATEGORY);
+    let cat: Category = may_load(&cat_store, &skull_key)?
+        .ok_or_else(|| StdError::generic_err("Skull Category storage is corrupt"))?;
+    let var_store =
+        ReadonlyPrefixedStorage::multilevel(deps.storage, &[PREFIX_VARIANT, &skull_key]);
+    let mut skull_variants: Vec<VariantIdxName> = Vec::new();
+    for idx in 0..cat.cnt {
+        let variant_info: VariantInfo = may_load(&var_store, &idx.to_le_bytes())?
+            .ok_or_else(|| StdError::generic_err("Skull Variant storage is corrupt"))?;
+        skull_variants.push(VariantIdxName {
+            idx,
+            name: variant_info.display_name,
+        });
+    }
+
+    to_binary(&QueryAnswer::SkullTypePlus {
+        cyclops,
+        jawless,
+        skull_idx,
+        skull_variants,
+    })
 }
 
 /// Returns StdResult<Binary> which provides the info needed by alchemy/reveal contracts

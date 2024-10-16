@@ -326,17 +326,19 @@
       "additionalProperties": false
     },
     {
-      "description": "display the StoredLayerId for jawless and cyclops",
+      "description": "display the StoredLayerId for jawless and cyclops, and the info about skull materials",
       "type": "object",
       "required": [
-        "skull_type_layer_ids"
+        "skull_type_plus"
       ],
       "properties": {
-        "skull_type_layer_ids": {
+        "skull_type_plus": {
           "type": "object",
           "required": [
             "cyclops",
-            "jawless"
+            "jawless",
+            "skull_idx",
+            "skull_variants"
           ],
           "properties": {
             "cyclops": {
@@ -354,6 +356,19 @@
                   "$ref": "#/definitions/StoredLayerId"
                 }
               ]
+            },
+            "skull_idx": {
+              "description": "skull category index",
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            },
+            "skull_variants": {
+              "description": "list of all skull materials",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/VariantIdxName"
+              }
             }
           }
         }
@@ -659,6 +674,26 @@
         },
         "value": {
           "description": "trait value",
+          "type": "string"
+        }
+      }
+    },
+    "VariantIdxName": {
+      "description": "a variant's index and display name",
+      "type": "object",
+      "required": [
+        "idx",
+        "name"
+      ],
+      "properties": {
+        "idx": {
+          "description": "index of the variant",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "name": {
+          "description": "display name of the variant",
           "type": "string"
         }
       }

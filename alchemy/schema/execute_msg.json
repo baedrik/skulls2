@@ -1,0 +1,433 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ExecuteMsg",
+  "description": "Handle messages",
+  "oneOf": [
+    {
+      "description": "claim staking rewards",
+      "type": "object",
+      "required": [
+        "claim_stake"
+      ],
+      "properties": {
+        "claim_stake": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "set the staking list",
+      "type": "object",
+      "required": [
+        "set_stake"
+      ],
+      "properties": {
+        "set_stake": {
+          "type": "object",
+          "required": [
+            "token_ids"
+          ],
+          "properties": {
+            "token_ids": {
+              "description": "list of skull token ids to stake (up to 5)",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Create a viewing key",
+      "type": "object",
+      "required": [
+        "create_viewing_key"
+      ],
+      "properties": {
+        "create_viewing_key": {
+          "type": "object",
+          "required": [
+            "entropy"
+          ],
+          "properties": {
+            "entropy": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Set a viewing key",
+      "type": "object",
+      "required": [
+        "set_viewing_key"
+      ],
+      "properties": {
+        "set_viewing_key": {
+          "type": "object",
+          "required": [
+            "key"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "padding": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "allows an admin to add more admins",
+      "type": "object",
+      "required": [
+        "add_admins"
+      ],
+      "properties": {
+        "add_admins": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "description": "list of address to grant admin priveleges",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "allows an admin to remove admin addresses",
+      "type": "object",
+      "required": [
+        "remove_admins"
+      ],
+      "properties": {
+        "remove_admins": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "description": "list of address to revoke admin priveleges from",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "retrieve info about skull types from the svg server",
+      "type": "object",
+      "required": [
+        "get_skull_type_info"
+      ],
+      "properties": {
+        "get_skull_type_info": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "add ingredients",
+      "type": "object",
+      "required": [
+        "add_ingredients"
+      ],
+      "properties": {
+        "add_ingredients": {
+          "type": "object",
+          "required": [
+            "ingredients"
+          ],
+          "properties": {
+            "ingredients": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "create named sets of ingredients for staking tables",
+      "type": "object",
+      "required": [
+        "define_ingredient_sets"
+      ],
+      "properties": {
+        "define_ingredient_sets": {
+          "type": "object",
+          "required": [
+            "sets"
+          ],
+          "properties": {
+            "sets": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IngredientSet"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "create staking tables for specified skull materials",
+      "type": "object",
+      "required": [
+        "set_staking_tables"
+      ],
+      "properties": {
+        "set_staking_tables": {
+          "type": "object",
+          "required": [
+            "tables"
+          ],
+          "properties": {
+            "tables": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/StakingTable"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "set halt status for staking and/or alchemy",
+      "type": "object",
+      "required": [
+        "set_halt_status"
+      ],
+      "properties": {
+        "set_halt_status": {
+          "type": "object",
+          "properties": {
+            "alchemy": {
+              "description": "optionally set alchemy halt status",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "staking": {
+              "description": "optionally set staking halt status",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "set charging time for staking",
+      "type": "object",
+      "required": [
+        "set_charge_time"
+      ],
+      "properties": {
+        "set_charge_time": {
+          "type": "object",
+          "required": [
+            "charge_time"
+          ],
+          "properties": {
+            "charge_time": {
+              "description": "number of seconds to earn a staking charge (604800 for prod)",
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "set addresses and code hashes for used contracts",
+      "type": "object",
+      "required": [
+        "set_contract_infos"
+      ],
+      "properties": {
+        "set_contract_infos": {
+          "type": "object",
+          "properties": {
+            "crate_contract": {
+              "description": "optional crating contract (can either update the code hash of an existing one or add a new one)",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ContractInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "skulls_contract": {
+              "description": "optional code hash and address of the skulls contract",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ContractInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "svg_server": {
+              "description": "optional code hash and address of the svg server",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ContractInfo"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "disallow the use of a permit",
+      "type": "object",
+      "required": [
+        "revoke_permit"
+      ],
+      "properties": {
+        "revoke_permit": {
+          "type": "object",
+          "required": [
+            "permit_name"
+          ],
+          "properties": {
+            "permit_name": {
+              "description": "name of the permit that is no longer valid",
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "definitions": {
+    "ContractInfo": {
+      "description": "code hash and address of a secret contract",
+      "type": "object",
+      "required": [
+        "address",
+        "code_hash"
+      ],
+      "properties": {
+        "address": {
+          "description": "contract's address",
+          "type": "string"
+        },
+        "code_hash": {
+          "description": "contract's code hash string",
+          "type": "string"
+        }
+      }
+    },
+    "IngrSetWeight": {
+      "description": "ingredient sets and their staking weight",
+      "type": "object",
+      "required": [
+        "ingredient_set",
+        "weight"
+      ],
+      "properties": {
+        "ingredient_set": {
+          "description": "name of the set",
+          "type": "string"
+        },
+        "weight": {
+          "description": "weight",
+          "type": "integer",
+          "format": "uint16",
+          "minimum": 0.0
+        }
+      }
+    },
+    "IngredientSet": {
+      "description": "set of ingredients for the staking tables",
+      "type": "object",
+      "required": [
+        "members",
+        "name"
+      ],
+      "properties": {
+        "members": {
+          "description": "list of ingredients in this set",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "description": "name of the set",
+          "type": "string"
+        }
+      }
+    },
+    "StakingTable": {
+      "description": "staking chances of ingredient sets and their weights for a specified skull material",
+      "type": "object",
+      "required": [
+        "ingredient_set_weights",
+        "material"
+      ],
+      "properties": {
+        "ingredient_set_weights": {
+          "description": "ingredient sets and their weights",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IngrSetWeight"
+          }
+        },
+        "material": {
+          "description": "skull material that uses this table",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

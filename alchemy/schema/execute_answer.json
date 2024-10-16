@@ -1,0 +1,342 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ExecuteAnswer",
+  "description": "Responses from handle functions",
+  "oneOf": [
+    {
+      "description": "response from creating a viewing key",
+      "type": "object",
+      "required": [
+        "viewing_key"
+      ],
+      "properties": {
+        "viewing_key": {
+          "type": "object",
+          "required": [
+            "key"
+          ],
+          "properties": {
+            "key": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "response from adding/removing admins",
+      "type": "object",
+      "required": [
+        "admins_list"
+      ],
+      "properties": {
+        "admins_list": {
+          "type": "object",
+          "required": [
+            "admins"
+          ],
+          "properties": {
+            "admins": {
+              "description": "current admins",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Addr"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "response from adding ingredients",
+      "type": "object",
+      "required": [
+        "add_ingredients"
+      ],
+      "properties": {
+        "add_ingredients": {
+          "type": "object",
+          "required": [
+            "ingredients"
+          ],
+          "properties": {
+            "ingredients": {
+              "description": "all known ingredients",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "response from creating named sets of ingredients for staking tables",
+      "type": "object",
+      "required": [
+        "define_ingredient_sets"
+      ],
+      "properties": {
+        "define_ingredient_sets": {
+          "type": "object",
+          "required": [
+            "count"
+          ],
+          "properties": {
+            "count": {
+              "description": "number of ingredient sets",
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "response from creating staking tables for specified skull materials",
+      "type": "object",
+      "required": [
+        "set_staking_tables"
+      ],
+      "properties": {
+        "set_staking_tables": {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "response from setting halt status for staking and/or alchemy",
+      "type": "object",
+      "required": [
+        "set_halt_status"
+      ],
+      "properties": {
+        "set_halt_status": {
+          "type": "object",
+          "required": [
+            "alchemy_is_halted",
+            "staking_is_halted"
+          ],
+          "properties": {
+            "alchemy_is_halted": {
+              "description": "true if alchemy is halted",
+              "type": "boolean"
+            },
+            "staking_is_halted": {
+              "description": "true if staking is halted",
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "response from claiming or setting the staking list",
+      "type": "object",
+      "required": [
+        "stake_info"
+      ],
+      "properties": {
+        "stake_info": {
+          "type": "object",
+          "required": [
+            "charge_infos",
+            "rewards"
+          ],
+          "properties": {
+            "charge_infos": {
+              "description": "charge info of the skulls currently staking",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ChargeInfo"
+              }
+            },
+            "rewards": {
+              "description": "ingredients rewarded in this tx",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IngredientQty"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "response from setting charging time for staking",
+      "type": "object",
+      "required": [
+        "set_charge_time"
+      ],
+      "properties": {
+        "set_charge_time": {
+          "type": "object",
+          "required": [
+            "charge_time"
+          ],
+          "properties": {
+            "charge_time": {
+              "description": "number of seconds to earn a staking charge (604800 for prod)",
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "response to setting addresses and code hashes for used contracts",
+      "type": "object",
+      "required": [
+        "set_contract_infos"
+      ],
+      "properties": {
+        "set_contract_infos": {
+          "type": "object",
+          "required": [
+            "crate_contracts",
+            "skulls_contract",
+            "svg_server"
+          ],
+          "properties": {
+            "crate_contracts": {
+              "description": "crate contracts",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContractInfo"
+              }
+            },
+            "skulls_contract": {
+              "description": "code hash and address of the skulls contract",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/ContractInfo"
+                }
+              ]
+            },
+            "svg_server": {
+              "description": "code hash and address of the svg server",
+              "allOf": [
+                {
+                  "$ref": "#/definitions/ContractInfo"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "response from revoking a permit",
+      "type": "object",
+      "required": [
+        "revoke_permit"
+      ],
+      "properties": {
+        "revoke_permit": {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "definitions": {
+    "Addr": {
+      "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
+      "type": "string"
+    },
+    "ChargeInfo": {
+      "description": "a skull's token id and info about its accrued charges",
+      "type": "object",
+      "required": [
+        "charge_start",
+        "charges",
+        "token_id"
+      ],
+      "properties": {
+        "charge_start": {
+          "description": "timestamp for beginning of unclaimed charge",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "charges": {
+          "description": "whole number of charges accrued since charge_start (game cap at 4)",
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0.0
+        },
+        "token_id": {
+          "description": "token id fo the skull",
+          "type": "string"
+        }
+      }
+    },
+    "ContractInfo": {
+      "description": "code hash and address of a secret contract",
+      "type": "object",
+      "required": [
+        "address",
+        "code_hash"
+      ],
+      "properties": {
+        "address": {
+          "description": "contract's address",
+          "type": "string"
+        },
+        "code_hash": {
+          "description": "contract's code hash string",
+          "type": "string"
+        }
+      }
+    },
+    "IngredientQty": {
+      "description": "an ingredient and its quantity",
+      "type": "object",
+      "required": [
+        "ingredient",
+        "quantity"
+      ],
+      "properties": {
+        "ingredient": {
+          "description": "name of the ingredient",
+          "type": "string"
+        },
+        "quantity": {
+          "description": "quantity of this ingredient",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    }
+  }
+}

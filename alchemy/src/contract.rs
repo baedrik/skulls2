@@ -1,5 +1,4 @@
 use base64::{engine::general_purpose, Engine as _};
-use rand::seq::SliceRandom;
 use rand_core::RngCore;
 
 use cosmwasm_std::{
@@ -1533,20 +1532,19 @@ fn gen_resources(
 ) -> StdResult<Vec<u32>> {
     let mut generated: Vec<u32> = vec![0; ingr_cnt];
     let mut rng = ContractPrng::from_env(env);
-    let type_cnt = quantities.iter().filter(|&q| *q > 0).count() as u8;
+    let type_cnt = quantities.iter().filter(|&q| *q > 0).count() as u64;
     let variety_lim = (2 * type_cnt) + 1;
-    let mut ingr_sets: Vec<StoredIngrSet> = may_load(storage, INGRED_SETS_KEY)?.unwrap_or_default();
+    let ingr_sets: Vec<StoredIngrSet> = may_load(storage, INGRED_SETS_KEY)?.unwrap_or_default();
     let mut wins_per_set: Vec<u16> = vec![0; ingr_sets.len()];
     // go through each material type and the number of charges for each
     for (i, charge) in charges.iter().enumerate() {
         // process each charge for this material type
         for _ in 0u8..*charge {
             // randomly determine number of resources generated for this charge
-            let mut draw_material: Vec<u8> = (0u8..(quantities[i] + 1)).collect();
-            draw_material.shuffle(&mut rng.rng);
-            let mut draw_variety: Vec<u8> = (0u8..variety_lim).collect();
-            draw_variety.shuffle(&mut rng.rng);
-            let rolls: u8 = 1 + draw_material[0] + draw_variety[0];
+            let rdm_mat = rng.next_u64();
+            let rdm_var = rng.next_u64();
+            let rolls: u8 =
+                1 + (rdm_mat % (quantities[i] as u64 + 1u64)) as u8 + (rdm_var % variety_lim) as u8;
             let tbl_store = ReadonlyPrefixedStorage::new(storage, PREFIX_STAKING_TABLE);
             let i_sml = i as u8;
             let stk_tbl: Vec<StoredSetWeight> = load(&tbl_store, &i_sml.to_le_bytes())?;
@@ -1573,9 +1571,21 @@ fn gen_resources(
     }
     // randomly pick ingredients from each winning set of ingredients
     for (idx, resource_cnt) in wins_per_set.iter().enumerate() {
-        for _ in 0u16..*resource_cnt {
-            ingr_sets[idx].list.shuffle(&mut rng.rng);
-            generated[ingr_sets[idx].list[0] as usize] += 1;
+        // if this set had been picked
+        if *resource_cnt > 0 {
+            // number of ingredients to pick from
+            let ingr_cnt = ingr_sets[idx].list.len() as u64;
+            for _ in 0u16..*resource_cnt {
+                let win = if ingr_cnt == 1 {
+                    // no need to waste resources getting a rdm number if there is only one possible
+                    0usize
+                } else {
+                    // more than one ingredient in this set
+                    let rdm_ing = rng.next_u64();
+                    (rdm_ing % ingr_cnt) as usize
+                };
+                generated[ingr_sets[idx].list[win] as usize] += 1;
+            }
         }
     }
     Ok(generated)

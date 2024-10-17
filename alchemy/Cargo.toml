@@ -41,7 +41,6 @@ serde = { version = "1.0.190", default-features = false, features = ["derive"] }
 secret-toolkit = { version = "0.10.0", default-features = false, features = ["utils", "permit", "viewing-key", "crypto"] }
 base64 = "0.21.2"
 bincode2 = "2.0.1"
-rand = "0.8.5"
 rand_core = { version = "0.6.4", default-features = false }
 
 [dev-dependencies]

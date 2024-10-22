@@ -42,6 +42,30 @@
       "additionalProperties": false
     },
     {
+      "description": "remove ingredients from a user's inventory to mint an nft containing them",
+      "type": "object",
+      "required": [
+        "crate_ingredients"
+      ],
+      "properties": {
+        "crate_ingredients": {
+          "type": "object",
+          "required": [
+            "ingredients"
+          ],
+          "properties": {
+            "ingredients": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IngredientQty"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
       "description": "Create a viewing key",
       "type": "object",
       "required": [
@@ -225,7 +249,7 @@
       "additionalProperties": false
     },
     {
-      "description": "set halt status for staking and/or alchemy",
+      "description": "set halt status for staking, crating, and/or alchemy",
       "type": "object",
       "required": [
         "set_halt_status"
@@ -236,6 +260,13 @@
           "properties": {
             "alchemy": {
               "description": "optionally set alchemy halt status",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "crating": {
+              "description": "optionally set crating halt status",
               "type": [
                 "boolean",
                 "null"
@@ -326,6 +357,106 @@
       "additionalProperties": false
     },
     {
+      "description": "set the crate nft base metadata",
+      "type": "object",
+      "required": [
+        "set_crate_metadata"
+      ],
+      "properties": {
+        "set_crate_metadata": {
+          "type": "object",
+          "required": [
+            "public_metadata"
+          ],
+          "properties": {
+            "public_metadata": {
+              "$ref": "#/definitions/Metadata"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "BatchReceiveNft is called when this contract is sent an NFT (potion or crate)",
+      "type": "object",
+      "required": [
+        "batch_receive_nft"
+      ],
+      "properties": {
+        "batch_receive_nft": {
+          "type": "object",
+          "required": [
+            "from",
+            "token_ids"
+          ],
+          "properties": {
+            "from": {
+              "description": "address of the previous owner of the token being sent",
+              "type": "string"
+            },
+            "msg": {
+              "description": "base64 encoded msg to specify the skull the potion should be applied to (if applicable)",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Binary"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "token_ids": {
+              "description": "list of tokens sent",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "ReceiveNft is only included to maintatin CW721 compliance.  Hopefully everyone uses the superior BatchReceiveNft process.  ReceiveNft is called when this contract is sent an NFT (potion or crate)",
+      "type": "object",
+      "required": [
+        "receive_nft"
+      ],
+      "properties": {
+        "receive_nft": {
+          "type": "object",
+          "required": [
+            "sender",
+            "token_id"
+          ],
+          "properties": {
+            "msg": {
+              "description": "base64 encoded msg to specify the skull the potion should be applied to (if applicable)",
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Binary"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "sender": {
+              "description": "address of the previous owner of the token being sent",
+              "type": "string"
+            },
+            "token_id": {
+              "description": "the token sent",
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
       "description": "disallow the use of a permit",
       "type": "object",
       "required": [
@@ -349,6 +480,10 @@
     }
   ],
   "definitions": {
+    "Binary": {
+      "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>. See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.",
+      "type": "string"
+    },
     "ContractInfo": {
       "description": "code hash and address of a secret contract",
       "type": "object",
@@ -364,6 +499,50 @@
         "code_hash": {
           "description": "contract's code hash string",
           "type": "string"
+        }
+      }
+    },
+    "Extension": {
+      "description": "metadata extension You can add any metadata fields you need here.  These fields are based on https://docs.opensea.io/docs/metadata-standards and are the metadata fields that Stashh uses for robust NFT display.  Urls should be prefixed with `http://`, `https://`, `ipfs://`, or `ar://`",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "item attributes",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Trait"
+          }
+        },
+        "description": {
+          "description": "item description",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image": {
+          "description": "url to the image",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image_data": {
+          "description": "raw SVG image data (not recommended). Only use this if you're not including the image parameter",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "name of the item",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
@@ -383,6 +562,26 @@
           "description": "weight",
           "type": "integer",
           "format": "uint16",
+          "minimum": 0.0
+        }
+      }
+    },
+    "IngredientQty": {
+      "description": "an ingredient and its quantity",
+      "type": "object",
+      "required": [
+        "ingredient",
+        "quantity"
+      ],
+      "properties": {
+        "ingredient": {
+          "description": "name of the ingredient",
+          "type": "string"
+        },
+        "quantity": {
+          "description": "quantity of this ingredient",
+          "type": "integer",
+          "format": "uint32",
           "minimum": 0.0
         }
       }
@@ -408,6 +607,23 @@
         }
       }
     },
+    "Metadata": {
+      "description": "token metadata",
+      "type": "object",
+      "required": [
+        "extension"
+      ],
+      "properties": {
+        "extension": {
+          "description": "on-chain metadata",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Extension"
+            }
+          ]
+        }
+      }
+    },
     "StakingTable": {
       "description": "staking chances of ingredient sets and their weights for a specified skull material",
       "type": "object",
@@ -425,6 +641,24 @@
         },
         "material": {
           "description": "skull material that uses this table",
+          "type": "string"
+        }
+      }
+    },
+    "Trait": {
+      "description": "attribute trait",
+      "type": "object",
+      "required": [
+        "trait_type",
+        "value"
+      ],
+      "properties": {
+        "trait_type": {
+          "description": "name of the trait",
+          "type": "string"
+        },
+        "value": {
+          "description": "trait value",
           "type": "string"
         }
       }

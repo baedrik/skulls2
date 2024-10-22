@@ -120,7 +120,7 @@
       "additionalProperties": false
     },
     {
-      "description": "response from setting halt status for staking and/or alchemy",
+      "description": "response from setting halt status for staking, crating, and/or alchemy",
       "type": "object",
       "required": [
         "set_halt_status"
@@ -130,6 +130,7 @@
           "type": "object",
           "required": [
             "alchemy_is_halted",
+            "crating_is_halted",
             "staking_is_halted"
           ],
           "properties": {
@@ -137,9 +138,58 @@
               "description": "true if alchemy is halted",
               "type": "boolean"
             },
+            "crating_is_halted": {
+              "description": "true if crating is halted",
+              "type": "boolean"
+            },
             "staking_is_halted": {
               "description": "true if staking is halted",
               "type": "boolean"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "response from setting the crate nft base metadata",
+      "type": "object",
+      "required": [
+        "set_crate_metadata"
+      ],
+      "properties": {
+        "set_crate_metadata": {
+          "type": "object",
+          "required": [
+            "public_metadata"
+          ],
+          "properties": {
+            "public_metadata": {
+              "$ref": "#/definitions/Metadata"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "response from removing ingredients from a user's inventory to mint an nft containing them",
+      "type": "object",
+      "required": [
+        "crate_ingredients"
+      ],
+      "properties": {
+        "crate_ingredients": {
+          "type": "object",
+          "required": [
+            "updated_inventory"
+          ],
+          "properties": {
+            "updated_inventory": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IngredientQty"
+              }
             }
           }
         }
@@ -318,6 +368,50 @@
         }
       }
     },
+    "Extension": {
+      "description": "metadata extension You can add any metadata fields you need here.  These fields are based on https://docs.opensea.io/docs/metadata-standards and are the metadata fields that Stashh uses for robust NFT display.  Urls should be prefixed with `http://`, `https://`, `ipfs://`, or `ar://`",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "item attributes",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Trait"
+          }
+        },
+        "description": {
+          "description": "item description",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image": {
+          "description": "url to the image",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image_data": {
+          "description": "raw SVG image data (not recommended). Only use this if you're not including the image parameter",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "name of the item",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
     "IngredientQty": {
       "description": "an ingredient and its quantity",
       "type": "object",
@@ -335,6 +429,41 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0.0
+        }
+      }
+    },
+    "Metadata": {
+      "description": "token metadata",
+      "type": "object",
+      "required": [
+        "extension"
+      ],
+      "properties": {
+        "extension": {
+          "description": "on-chain metadata",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Extension"
+            }
+          ]
+        }
+      }
+    },
+    "Trait": {
+      "description": "attribute trait",
+      "type": "object",
+      "required": [
+        "trait_type",
+        "value"
+      ],
+      "properties": {
+        "trait_type": {
+          "description": "name of the trait",
+          "type": "string"
+        },
+        "value": {
+          "description": "trait value",
+          "type": "string"
         }
       }
     }

@@ -3,7 +3,7 @@ use rand_core::RngCore;
 
 use cosmwasm_std::{
     entry_point, to_binary, Addr, Api, Binary, CanonicalAddr, CosmosMsg, Deps, DepsMut, Env,
-    MessageInfo, Response, StdError, StdResult, Storage,
+    MessageInfo, Response, StdError, StdResult, Storage, Uint128,
 };
 use cosmwasm_storage::{PrefixedStorage, ReadonlyPrefixedStorage};
 use std::cmp::min;
@@ -17,17 +17,21 @@ use secret_toolkit::{
 
 use crate::contract_info::{ContractInfo, StoreContractInfo};
 use crate::msg::{
-    AlchemyState, ChargeInfo, EligibilityInfo, ExecuteAnswer, ExecuteMsg, IngrSetWeight,
-    IngredientQty, IngredientSet, InstantiateMsg, QueryAnswer, QueryMsg, SelfHandleMsg,
+    AlchemyState, ChargeInfo, DisplayCrateState, EligibilityInfo, ExecuteAnswer, ExecuteMsg,
+    IngrSetWeight, IngredientQty, IngredientSet, InstantiateMsg, QueryAnswer, QueryMsg,
     StakingState, StakingTable, StoredLayerId, VariantIdxName, ViewerInfo,
 };
 use crate::server_msgs::{ServerQueryMsg, SkullTypePlusWrapper};
-use crate::snip721::{ImageInfo, ImageInfoWrapper, Snip721HandleMsg, Snip721QueryMsg};
+use crate::snip721::{
+    BatchNftDossierWrapper, Burn, ImageInfo, ImageInfoWrapper, Metadata, Snip721HandleMsg,
+    Snip721QueryMsg, Trait,
+};
 use crate::state::{
-    SkullStakeInfo, StoredIngrSet, StoredSetWeight, ADMINS_KEY, ALCHEMY_STATE_KEY, CRATES_KEY,
-    INGREDIENTS_KEY, INGRED_SETS_KEY, MATERIALS_KEY, MY_VIEWING_KEY, PREFIX_REVOKED_PERMITS,
-    PREFIX_SKULL_STAKE, PREFIX_STAKING_TABLE, PREFIX_USER_INGR_INVENTORY, PREFIX_USER_STAKE,
-    SKULL_721_KEY, STAKING_STATE_KEY, SVG_SERVER_KEY,
+    CrateState, SkullStakeInfo, StoredIngrSet, StoredSetWeight, ADMINS_KEY, ALCHEMY_STATE_KEY,
+    CRATES_KEY, CRATE_META_KEY, CRATE_STATE_KEY, INGREDIENTS_KEY, INGRED_SETS_KEY, MATERIALS_KEY,
+    MY_VIEWING_KEY, PREFIX_REVOKED_PERMITS, PREFIX_SKULL_STAKE, PREFIX_STAKING_TABLE,
+    PREFIX_USER_INGR_INVENTORY, PREFIX_USER_STAKE, SKULL_721_KEY, STAKING_STATE_KEY,
+    SVG_SERVER_KEY,
 };
 use crate::storage::{load, may_load, save};
 
@@ -89,7 +93,15 @@ pub fn instantiate(
         code_hash: msg.skulls_contract.code_hash,
     };
     save(deps.storage, SKULL_721_KEY, &skull_raw)?;
-    let crates = vec![msg.crate_contract.into_store(deps.api)?];
+    let crate_addr = deps
+        .api
+        .addr_validate(&msg.crate_contract.address)
+        .and_then(|a| deps.api.addr_canonicalize(a.as_str()))?;
+    let crate_raw = StoreContractInfo {
+        address: crate_addr,
+        code_hash: msg.crate_contract.code_hash,
+    };
+    let mut crates = vec![crate_raw];
     save(deps.storage, CRATES_KEY, &crates)?;
     let stk_st = StakingState {
         halt: true,
@@ -109,6 +121,8 @@ pub fn instantiate(
         },
     };
     save(deps.storage, ALCHEMY_STATE_KEY, &alc_st)?;
+    let crate_st = CrateState { halt: true, cnt: 0 };
+    save(deps.storage, CRATE_STATE_KEY, &crate_st)?;
     let messages = vec![
         Snip721HandleMsg::SetViewingKey { key: key.clone() }.to_cosmos_msg(
             svg_raw.code_hash,
@@ -120,9 +134,13 @@ pub fn instantiate(
             msg.skulls_contract.address,
             None,
         )?,
-        SelfHandleMsg::GetSkullTypeInfo {}.to_cosmos_msg(
-            env.contract.code_hash,
-            env.contract.address.into_string(),
+        Snip721HandleMsg::RegisterReceiveNft {
+            code_hash: env.contract.code_hash,
+            also_implements_batch_receive_nft: true,
+        }
+        .to_cosmos_msg(
+            crates.swap_remove(0).code_hash,
+            msg.crate_contract.address,
             None,
         )?,
     ];
@@ -156,8 +174,16 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
         }
         ExecuteMsg::SetStakingTables { tables } => try_stake_tbl(deps, &info.sender, tables),
         ExecuteMsg::DefineIngredientSets { sets } => try_set_ingred_set(deps, &info.sender, sets),
-        ExecuteMsg::SetHaltStatus { staking, alchemy } => {
-            try_set_halt(deps, &info.sender, staking, alchemy)
+        ExecuteMsg::SetHaltStatus {
+            staking,
+            alchemy,
+            crating,
+        } => try_set_halt(deps, &info.sender, staking, alchemy, crating),
+        ExecuteMsg::SetCrateMetadata { public_metadata } => {
+            try_set_crate_meta(deps, &info.sender, public_metadata)
+        }
+        ExecuteMsg::CrateIngredients { ingredients } => {
+            try_mint_crate(deps, info.sender, ingredients)
         }
         ExecuteMsg::SetStake { token_ids } => try_set_stake(deps, env, &info.sender, token_ids),
         ExecuteMsg::ClaimStake {} => try_claim_stake(deps, env, &info.sender),
@@ -174,12 +200,116 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             svg_server,
             skulls_contract,
             crate_contract,
+            env.contract.code_hash,
         ),
+        ExecuteMsg::BatchReceiveNft {
+            from,
+            token_ids,
+            msg,
+        } => try_batch_receive(deps, env, info.sender, &from, token_ids, msg),
+        ExecuteMsg::ReceiveNft {
+            sender,
+            token_id,
+            msg,
+        } => try_batch_receive(deps, env, info.sender, &sender, vec![token_id], msg),
         ExecuteMsg::RevokePermit { permit_name } => {
             revoke_permit(deps.storage, &info.sender, &permit_name)
         }
     };
     pad_handle_result(response, BLOCK_SIZE)
+}
+
+/// Returns StdResult<Response>
+///
+/// mint a crate nft containing the specified ingredients
+///
+/// # Arguments
+///
+/// * `deps` - a mutable reference to Extern containing all the contract's external dependencies
+/// * `sender` - the message sender
+/// * `crate_ingredients` - ingredients that should be crated
+fn try_mint_crate(
+    deps: DepsMut,
+    sender: Addr,
+    crate_ingredients: Vec<IngredientQty>,
+) -> StdResult<Response> {
+    let mut crt_state: CrateState = load(deps.storage, CRATE_STATE_KEY)?;
+    if crt_state.halt {
+        return Err(StdError::generic_err("Crating has been halted"));
+    }
+    let user_raw = deps.api.addr_canonicalize(sender.as_str())?;
+    let user_key = user_raw.as_slice();
+    let mut updated_inventory: Vec<IngredientQty> = Vec::new();
+    // get list of all ingredients
+    let ingredients: Vec<String> = may_load(deps.storage, INGREDIENTS_KEY)?.unwrap_or_default();
+    let ingr_cnt = ingredients.len();
+    // get user's inventory
+    let mut inv_store = PrefixedStorage::new(deps.storage, PREFIX_USER_INGR_INVENTORY);
+    let mut raw_inv: Vec<u32> = may_load(&inv_store, user_key)?.unwrap_or_default();
+    // just in case new ingredients get added, extend old inventories
+    raw_inv.resize(ingr_cnt, 0);
+    let mut for_crate: Vec<u32> = vec![0; ingr_cnt];
+    // remove the crated ingredients from the user inventory
+    for ing_qty in crate_ingredients.into_iter() {
+        if let Some(pos) = ingredients.iter().position(|i| *i == ing_qty.ingredient) {
+            if raw_inv[pos] < ing_qty.quantity {
+                return Err(StdError::generic_err(format!(
+                    "You do not have {} {}",
+                    ing_qty.quantity, ing_qty.ingredient
+                )));
+            }
+            raw_inv[pos] -= ing_qty.quantity;
+            for_crate[pos] += ing_qty.quantity;
+        } else {
+            return Err(StdError::generic_err(format!(
+                "{} is not a known ingredient",
+                ing_qty.ingredient
+            )));
+        }
+    }
+    save(&mut inv_store, user_key, &raw_inv)?;
+    let mut public_metadata: Metadata = load(deps.storage, CRATE_META_KEY)?;
+    let mut attrs: Vec<Trait> = Vec::new();
+    // create traits for the crated ingredients
+    for (i, qty) in for_crate.into_iter().enumerate() {
+        if qty > 0 {
+            attrs.push(Trait {
+                trait_type: ingredients[i].clone(),
+                value: qty.to_string(),
+            });
+        }
+    }
+    if attrs.is_empty() {
+        return Err(StdError::generic_err(
+            "You are trying to make an empty crate",
+        ));
+    }
+    public_metadata.extension.name =
+        Some(format!("Mystic Skulls Ingredient Crate #{}", crt_state.cnt));
+    crt_state.cnt += 1;
+    save(deps.storage, CRATE_STATE_KEY, &crt_state)?;
+    public_metadata.extension.attributes = Some(attrs);
+    let mut raw_crates: Vec<StoreContractInfo> = load(deps.storage, CRATES_KEY)?;
+    let crate_contract = raw_crates
+        .pop()
+        .ok_or_else(|| StdError::generic_err("Crate contracts storage is corrupt"))
+        .and_then(|s| s.into_humanized(deps.api))?;
+    let messages = vec![Snip721HandleMsg::MintNft {
+        owner: sender.into_string(),
+        public_metadata,
+    }
+    .to_cosmos_msg(crate_contract.code_hash, crate_contract.address, None)?];
+    // display what is left in the inventory
+    for (i, quantity) in raw_inv.into_iter().enumerate() {
+        updated_inventory.push(IngredientQty {
+            ingredient: ingredients[i].clone(),
+            quantity,
+        });
+    }
+
+    Ok(Response::new().add_messages(messages).set_data(to_binary(
+        &ExecuteAnswer::CrateIngredients { updated_inventory },
+    )?))
 }
 
 /// Returns StdResult<Response>
@@ -382,6 +512,47 @@ fn try_set_stake(
 
 /// Returns StdResult<Response>
 ///
+/// handles receiving NFTs (potion or crate))
+///
+/// # Arguments
+///
+/// * `deps` - mutable reference to Extern containing all the contract's external dependencies
+/// * `env` - Env of contract's environment
+/// * `sender` - the message sender's address
+/// * `from` - a reference to the address that owned the NFTs
+/// * `token_ids` - list of tokens sent
+/// * `msg` - the base64 encoded msg containing the skull to apply the potion to (if applicable)
+fn try_batch_receive(
+    deps: DepsMut,
+    _env: Env,
+    sender: Addr,
+    from: &str,
+    token_ids: Vec<String>,
+    _msg: Option<Binary>,
+) -> StdResult<Response> {
+    let mut raw_crates: Vec<StoreContractInfo> = load(deps.storage, CRATES_KEY)?;
+    let sender_raw = deps.api.addr_canonicalize(sender.as_str())?;
+    if let Some(pos) = raw_crates.iter().position(|c| c.address == sender_raw) {
+        let crt_state: CrateState = load(deps.storage, CRATE_STATE_KEY)?;
+        if crt_state.halt {
+            return Err(StdError::generic_err("Uncrating has been halted"));
+        }
+        uncrate(
+            deps,
+            sender.into_string(),
+            raw_crates.swap_remove(pos).code_hash,
+            from,
+            token_ids,
+        )
+    } else {
+        Err(StdError::generic_err(
+            "This may only be called by crate or potion contracts",
+        ))
+    }
+}
+
+/// Returns StdResult<Response>
+///
 /// set code hashes and addresses of used contracts
 ///
 /// # Arguments
@@ -392,12 +563,14 @@ fn try_set_stake(
 /// * `new_skulls_contract` - optional code hash and address of the skulls contract
 /// * `new_crate_contract` - optional code hash and address of a crating contract (can either update the code
 ///                     hash of an existing one or add a new one)
+/// * `code_hash` - code hash of this contract
 fn try_set_contracts(
     deps: DepsMut,
     sender: &Addr,
     new_svg_server: Option<ContractInfo>,
     new_skulls_contract: Option<ContractInfo>,
     new_crate_contract: Option<ContractInfo>,
+    code_hash: String,
 ) -> StdResult<Response> {
     // only allow admins to do this
     check_admin_tx(deps.as_ref(), sender)?;
@@ -435,13 +608,20 @@ fn try_set_contracts(
     };
     let mut raw_crates: Vec<StoreContractInfo> = load(deps.storage, CRATES_KEY)?;
     if let Some(crt) = new_crate_contract {
-        let raw = crt.into_store(deps.api)?;
+        let raw = crt.get_store(deps.api)?;
         if let Some(old) = raw_crates.iter_mut().find(|c| c.address == raw.address) {
             old.code_hash = raw.code_hash;
         } else {
             raw_crates.push(raw);
         }
         save(deps.storage, CRATES_KEY, &raw_crates)?;
+        messages.push(
+            Snip721HandleMsg::RegisterReceiveNft {
+                code_hash,
+                also_implements_batch_receive_nft: true,
+            }
+            .to_cosmos_msg(crt.code_hash, crt.address, None)?,
+        );
     }
 
     let mut resp = Response::new();
@@ -486,7 +666,7 @@ fn try_set_charge_time(deps: DepsMut, sender: &Addr, charge_time: u64) -> StdRes
 
 /// Returns StdResult<Response>
 ///
-/// set the halt status of staking and/or alchemy
+/// set the halt status of staking, crating, and/or alchemy
 ///
 /// # Arguments
 ///
@@ -494,17 +674,20 @@ fn try_set_charge_time(deps: DepsMut, sender: &Addr, charge_time: u64) -> StdRes
 /// * `sender` - a reference to the message sender
 /// * `staking` - optionally set staking halt status
 /// * `alchemy` - optionally set alchemy halt status
+/// * `crating` - optionally set crating halt status
 fn try_set_halt(
     deps: DepsMut,
     sender: &Addr,
     staking: Option<bool>,
     alchemy: Option<bool>,
+    crating: Option<bool>,
 ) -> StdResult<Response> {
     // only allow admins to do this
     check_admin_tx(deps.as_ref(), sender)?;
 
     let mut stk_st: StakingState = load(deps.storage, STAKING_STATE_KEY)?;
     let mut alc_st: AlchemyState = load(deps.storage, ALCHEMY_STATE_KEY)?;
+    let mut crt_st: CrateState = load(deps.storage, CRATE_STATE_KEY)?;
     // if setting staking halt status
     if let Some(stk) = staking {
         // if it would change
@@ -540,11 +723,54 @@ fn try_set_halt(
             save(deps.storage, ALCHEMY_STATE_KEY, &alc_st)?;
         }
     }
+    // if setting crating state
+    if let Some(crt) = crating {
+        // if it would change
+        if crt_st.halt != crt {
+            crt_st.halt = crt;
+            // if enabling crating
+            if !crt_st.halt {
+                // verify that we have crate nft metadata
+                if may_load::<Metadata>(deps.storage, CRATE_META_KEY)?.is_none() {
+                    return Err(StdError::generic_err(
+                        "Crate metadata has not been added yet",
+                    ));
+                }
+            }
+            save(deps.storage, CRATE_STATE_KEY, &crt_st)?;
+        }
+    }
 
     Ok(
         Response::new().set_data(to_binary(&ExecuteAnswer::SetHaltStatus {
             staking_is_halted: stk_st.halt,
             alchemy_is_halted: alc_st.halt,
+            crating_is_halted: crt_st.halt,
+        })?),
+    )
+}
+
+/// Returns StdResult<Response>
+///
+/// set the base metadata for crate nfts
+///
+/// # Arguments
+///
+/// * `deps` - a mutable reference to Extern containing all the contract's external dependencies
+/// * `sender` - a reference to the message sender
+/// * `public_metadata` - base metadata for crate nfts
+fn try_set_crate_meta(
+    deps: DepsMut,
+    sender: &Addr,
+    public_metadata: Metadata,
+) -> StdResult<Response> {
+    // only allow admins to do this
+    check_admin_tx(deps.as_ref(), sender)?;
+    save(deps.storage, CRATE_META_KEY, &public_metadata)?;
+
+    Ok(
+        Response::new().set_data(to_binary(&ExecuteAnswer::SetCrateMetadata {
+            public_metadata,
         })?),
     )
 }
@@ -698,11 +924,8 @@ fn try_add_ingredients(
 /// * `sender` - a reference to the message sender
 /// * `env` - Env of contract's environment
 fn try_get_skull_info(deps: DepsMut, sender: &Addr, env: Env) -> StdResult<Response> {
-    // see if self-called
-    if *sender != env.contract.address {
-        // if not, only allow admins to do this
-        check_admin_tx(deps.as_ref(), sender)?;
-    }
+    // only allow admins to do this
+    check_admin_tx(deps.as_ref(), sender)?;
     let svg_server = load::<StoreContractInfo>(deps.storage, SVG_SERVER_KEY)
         .and_then(|s| s.into_humanized(deps.api))?;
     let viewing_key: String = load(deps.storage, MY_VIEWING_KEY)?;
@@ -868,10 +1091,12 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 fn query_halt(storage: &dyn Storage) -> StdResult<Binary> {
     let stk_st: StakingState = load(storage, STAKING_STATE_KEY)?;
     let alc_st: AlchemyState = load(storage, ALCHEMY_STATE_KEY)?;
+    let crt_st: CrateState = load(storage, CRATE_STATE_KEY)?;
 
     to_binary(&QueryAnswer::HaltStatuses {
         staking_is_halted: stk_st.halt,
         alchemy_is_halted: alc_st.halt,
+        crating_is_halted: crt_st.halt,
     })
 }
 
@@ -1228,10 +1453,15 @@ fn query_state(
     check_admin_query(deps, viewer, permit, my_addr)?;
     let staking_state: StakingState = load(deps.storage, STAKING_STATE_KEY)?;
     let alchemy_state: AlchemyState = load(deps.storage, ALCHEMY_STATE_KEY)?;
+    let crt_st: CrateState = load(deps.storage, CRATE_STATE_KEY)?;
 
     to_binary(&QueryAnswer::States {
         staking_state,
         alchemy_state,
+        crating_state: DisplayCrateState {
+            halt: crt_st.halt,
+            cnt: Uint128::new(crt_st.cnt),
+        },
     })
 }
 
@@ -1659,4 +1889,76 @@ fn display_inventory(storage: &dyn Storage, user_key: &[u8]) -> StdResult<Vec<In
         });
     }
     Ok(inventory)
+}
+
+/// Returns StdResult<Response>
+///
+/// uncrate crate nfts
+///
+/// # Arguments
+///
+/// * `deps` - mutable reference to Extern containing all the contract's external dependencies
+/// * `crate_addr` - the message sender's address
+/// * `crate_hash` - the message sender's code hash
+/// * `from` - a reference to the address that owned the crate NFTs
+/// * `token_ids` - list of tokens sent
+fn uncrate(
+    deps: DepsMut,
+    crate_addr: String,
+    crate_hash: String,
+    from: &str,
+    token_ids: Vec<String>,
+) -> StdResult<Response> {
+    if token_ids.is_empty() {
+        return Err(StdError::generic_err("No crate NFTs were sent"));
+    }
+    let user_raw = deps
+        .api
+        .addr_validate(from)
+        .and_then(|a| deps.api.addr_canonicalize(a.as_str()))?;
+    let user_key = user_raw.as_slice();
+    // get list of ingredients
+    let ingredients: Vec<String> = may_load(deps.storage, INGREDIENTS_KEY)?.unwrap_or_default();
+    let ingr_cnt = ingredients.len();
+    // get user's inventory
+    let mut inv_store = PrefixedStorage::new(deps.storage, PREFIX_USER_INGR_INVENTORY);
+    let mut raw_inv: Vec<u32> = may_load(&inv_store, user_key)?.unwrap_or_default();
+    // just in case new ingredients get added, extend old inventories
+    raw_inv.resize(ingr_cnt, 0);
+    // get the public metadata of all nfts sent
+    let dossiers = Snip721QueryMsg::BatchNftDossier {
+        token_ids: token_ids.clone(),
+    }
+    .query::<_, BatchNftDossierWrapper>(deps.querier, crate_hash.clone(), crate_addr.clone())?
+    .batch_nft_dossier
+    .nft_dossiers;
+    // burn all the crates sent
+    let burns = vec![Burn { token_ids }];
+    let mut resp = Response::new().add_message(
+        Snip721HandleMsg::BatchBurnNft { burns }.to_cosmos_msg(crate_hash, crate_addr, None)?,
+    );
+    let mut added: Vec<u32> = vec![0; ingr_cnt];
+    // add the crate ingredients to the user inventory
+    for dossier in dossiers.into_iter() {
+        let attrs = dossier
+            .public_metadata
+            .extension
+            .attributes
+            .ok_or_else(|| StdError::generic_err("Crate NFT is missing traits"))?;
+        for attr in attrs.into_iter() {
+            if let Some(pos) = ingredients.iter().position(|i| *i == attr.trait_type) {
+                let qty = attr.value.parse::<u32>().map_err(|e| {
+                    StdError::generic_err(format!("Ingredient quantity parse error: {}", e))
+                })?;
+                raw_inv[pos] += qty;
+                added[pos] += qty;
+            }
+        }
+    }
+    // create logs for each inredient added
+    for (i, qty) in added.iter().enumerate() {
+        resp = resp.add_attribute(ingredients[i].clone(), qty.to_string());
+    }
+    save(&mut inv_store, user_key, &raw_inv)?;
+    Ok(resp)
 }

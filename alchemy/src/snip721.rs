@@ -21,10 +21,36 @@ pub enum Snip721HandleMsg {
         /// desired viewing key
         key: String,
     },
+    /// mint new token
+    MintNft {
+        /// owner address
+        owner: String,
+        /// public metadata that can be seen by everyone
+        public_metadata: Metadata,
+    },
+    /// register this contract's code hash with the snip721
+    RegisterReceiveNft {
+        /// this contract's code hash
+        code_hash: String,
+        /// true because this contract also implements BatchReceiveNft
+        also_implements_batch_receive_nft: bool,
+    },
+    /// burn many tokens
+    BatchBurnNft {
+        /// list of burns to perform
+        burns: Vec<Burn>,
+    },
 }
 
 impl HandleCallback for Snip721HandleMsg {
     const BLOCK_SIZE: usize = BLOCK_SIZE;
+}
+
+/// token burn info used when doing a BatchBurnNft
+#[derive(Serialize)]
+pub struct Burn {
+    /// tokens being burnt
+    pub token_ids: Vec<String>,
 }
 
 /// snip721 query msgs
@@ -40,6 +66,8 @@ pub enum Snip721QueryMsg {
         /// address and viewing key of the querier
         viewer: ViewerInfo,
     },
+    /// displays public info of multiple tokens
+    BatchNftDossier { token_ids: Vec<String> },
 }
 
 impl Query for Snip721QueryMsg {
@@ -50,6 +78,25 @@ impl Query for Snip721QueryMsg {
 #[derive(Deserialize)]
 pub struct NftInfoWrapper {
     pub nft_info: Metadata,
+}
+
+/// snip721 BatchNftDossier query item
+#[derive(Deserialize)]
+pub struct BatchNftDossierElement {
+    //    pub token_id: String,
+    pub public_metadata: Metadata,
+}
+
+/// snip721 BatchNftDossier query response
+#[derive(Deserialize)]
+pub struct BatchNftDossierResponse {
+    pub nft_dossiers: Vec<BatchNftDossierElement>,
+}
+
+/// wrapper used to deserialize the snip721 BatchNftDossier query
+#[derive(Deserialize)]
+pub struct BatchNftDossierWrapper {
+    pub batch_nft_dossier: BatchNftDossierResponse,
 }
 
 /// data that determines a token's appearance
@@ -92,11 +139,8 @@ pub struct SendMsg {
 /// token metadata
 #[derive(Serialize, Deserialize, JsonSchema, Clone, PartialEq, Eq, Debug, Default)]
 pub struct Metadata {
-    /// optional uri for off-chain metadata.  This should be prefixed with `http://`, `https://`, `ipfs://`, or
-    /// `ar://`.  Only use this if you are not using `extension`
-    pub token_uri: Option<String>,
-    /// optional on-chain metadata.  Only use this if you are not using `token_uri`
-    pub extension: Option<Extension>,
+    /// on-chain metadata
+    pub extension: Extension,
 }
 
 /// metadata extension
@@ -110,61 +154,19 @@ pub struct Extension {
     pub image: Option<String>,
     /// raw SVG image data (not recommended). Only use this if you're not including the image parameter
     pub image_data: Option<String>,
-    /// url to allow users to view the item on your site
-    pub external_url: Option<String>,
     /// item description
     pub description: Option<String>,
     /// name of the item
     pub name: Option<String>,
     /// item attributes
     pub attributes: Option<Vec<Trait>>,
-    /// background color represented as a six-character hexadecimal without a pre-pended #
-    pub background_color: Option<String>,
-    /// url to a multimedia attachment
-    pub animation_url: Option<String>,
-    /// url to a YouTube video
-    pub youtube_url: Option<String>,
-    /// media files as specified on Stashh that allows for basic authenticatiion and decryption keys.
-    /// Most of the above is used for bridging public eth NFT metadata easily, whereas `media` will be used
-    /// when minting NFTs on Stashh
-    pub media: Option<Vec<MediaFile>>,
-    /// a select list of trait_types that are in the private metadata.  This will only ever be used
-    /// in public metadata
-    pub protected_attributes: Option<Vec<String>>,
 }
 
 /// attribute trait
 #[derive(Serialize, Deserialize, JsonSchema, Clone, PartialEq, Eq, Debug, Default)]
 pub struct Trait {
-    /// indicates how a trait should be displayed
-    pub display_type: Option<String>,
     /// name of the trait
-    pub trait_type: Option<String>,
+    pub trait_type: String,
     /// trait value
     pub value: String,
-    /// optional max value for numerical traits
-    pub max_value: Option<String>,
-}
-
-/// media file
-#[derive(Serialize, Deserialize, JsonSchema, Clone, PartialEq, Eq, Debug, Default)]
-pub struct MediaFile {
-    /// file type
-    /// Stashh currently uses: "image", "video", "audio", "text", "font", "application"
-    pub file_type: Option<String>,
-    /// file extension
-    pub extension: Option<String>,
-    /// authentication information
-    pub authentication: Option<Authentication>,
-    /// url to the file.  Urls should be prefixed with `http://`, `https://`, `ipfs://`, or `ar://`
-    pub url: String,
-}
-
-/// media file authentication
-#[derive(Serialize, Deserialize, JsonSchema, Clone, PartialEq, Eq, Debug, Default)]
-pub struct Authentication {
-    /// either a decryption key for encrypted files or a password for basic authentication
-    pub key: Option<String>,
-    /// username used in basic authentication
-    pub user: Option<String>,
 }

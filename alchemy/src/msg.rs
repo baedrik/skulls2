@@ -1,8 +1,8 @@
-use crate::contract::BLOCK_SIZE;
 use crate::contract_info::ContractInfo;
-use cosmwasm_std::Addr;
+use crate::snip721::Metadata;
+use cosmwasm_std::{Addr, Binary, Uint128};
 use schemars::JsonSchema;
-use secret_toolkit::{permit::Permit, utils::HandleCallback};
+use secret_toolkit::permit::Permit;
 use serde::{Deserialize, Serialize};
 
 /// Instantiation message
@@ -33,6 +33,8 @@ pub enum ExecuteMsg {
         /// list of skull token ids to stake (up to 5)
         token_ids: Vec<String>,
     },
+    /// remove ingredients from a user's inventory to mint an nft containing them
+    CrateIngredients { ingredients: Vec<IngredientQty> },
     /// Create a viewing key
     CreateViewingKey { entropy: String },
     /// Set a viewing key
@@ -59,12 +61,14 @@ pub enum ExecuteMsg {
     DefineIngredientSets { sets: Vec<IngredientSet> },
     /// create staking tables for specified skull materials
     SetStakingTables { tables: Vec<StakingTable> },
-    /// set halt status for staking and/or alchemy
+    /// set halt status for staking, crating, and/or alchemy
     SetHaltStatus {
         /// optionally set staking halt status
         staking: Option<bool>,
         /// optionally set alchemy halt status
         alchemy: Option<bool>,
+        /// optionally set crating halt status
+        crating: Option<bool>,
     },
     /// set charging time for staking
     SetChargeTime {
@@ -79,6 +83,28 @@ pub enum ExecuteMsg {
         skulls_contract: Option<ContractInfo>,
         /// optional crating contract (can either update the code hash of an existing one or add a new one)
         crate_contract: Option<ContractInfo>,
+    },
+    /// set the crate nft base metadata
+    SetCrateMetadata { public_metadata: Metadata },
+    /// BatchReceiveNft is called when this contract is sent an NFT (potion or crate)
+    BatchReceiveNft {
+        /// address of the previous owner of the token being sent
+        from: String,
+        /// list of tokens sent
+        token_ids: Vec<String>,
+        /// base64 encoded msg to specify the skull the potion should be applied to (if applicable)
+        msg: Option<Binary>,
+    },
+    /// ReceiveNft is only included to maintatin CW721 compliance.  Hopefully everyone uses the
+    /// superior BatchReceiveNft process.  ReceiveNft is called when this contract is sent an NFT
+    /// (potion or crate)
+    ReceiveNft {
+        /// address of the previous owner of the token being sent
+        sender: String,
+        /// the token sent
+        token_id: String,
+        /// base64 encoded msg to specify the skull the potion should be applied to (if applicable)
+        msg: Option<Binary>,
     },
     /// disallow the use of a permit
     RevokePermit {
@@ -110,12 +136,20 @@ pub enum ExecuteAnswer {
     },
     /// response from creating staking tables for specified skull materials
     SetStakingTables { status: String },
-    /// response from setting halt status for staking and/or alchemy
+    /// response from setting halt status for staking, crating, and/or alchemy
     SetHaltStatus {
         /// true if staking is halted
         staking_is_halted: bool,
         /// true if alchemy is halted
         alchemy_is_halted: bool,
+        /// true if crating is halted
+        crating_is_halted: bool,
+    },
+    /// response from setting the crate nft base metadata
+    SetCrateMetadata { public_metadata: Metadata },
+    /// response from removing ingredients from a user's inventory to mint an nft containing them
+    CrateIngredients {
+        updated_inventory: Vec<IngredientQty>,
     },
     /// response from claiming or setting the staking list
     StakeInfo {
@@ -146,9 +180,9 @@ pub enum ExecuteAnswer {
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
-    /// displays the halt statuses for staking and alchemy
+    /// displays the halt statuses for staking, crating, and alchemy
     HaltStatuses {},
-    /// displays the staking and alchemy states
+    /// displays the staking, crating, and alchemy states
     States {
         /// optional address and viewing key of an admin
         viewer: Option<ViewerInfo>,
@@ -252,19 +286,22 @@ pub enum QueryAnswer {
     },
     /// displays if the user is eligible for a first time staking bonus
     UserEligibleForBonus { is_eligible: bool },
-    /// displays the halt statuses for staking and alchemy
+    /// displays the halt statuses for staking, crating, and alchemy
     HaltStatuses {
         /// true if staking has been halted
         staking_is_halted: bool,
         /// true if alchemy has been halted
         alchemy_is_halted: bool,
+        /// true if crating has been halted
+        crating_is_halted: bool,
     },
     /// response listing the current admins
     Admins { admins: Vec<Addr> },
-    /// displays the staking and alchemy states
+    /// displays the staking, crating, and alchemy states
     States {
         staking_state: StakingState,
         alchemy_state: AlchemyState,
+        crating_state: DisplayCrateState,
     },
     /// displays the code hashes and addresses of used contracts
     Contracts {
@@ -382,6 +419,15 @@ pub struct AlchemyState {
     pub jawless: StoredLayerId,
 }
 
+/// displayable info about crating state
+#[derive(Serialize, Deserialize, JsonSchema, Clone, PartialEq, Eq, Debug)]
+pub struct DisplayCrateState {
+    /// true if crating is halted
+    pub halt: bool,
+    /// number of crates created
+    pub cnt: Uint128,
+}
+
 /// identifies a layer
 #[derive(Serialize, Deserialize, JsonSchema, Clone, PartialEq, Eq, Debug)]
 pub struct LayerId {
@@ -417,16 +463,4 @@ pub struct VariantIdxName {
     pub idx: u8,
     /// display name of the variant
     pub name: String,
-}
-
-/// the handle messages that will be called by itself
-#[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum SelfHandleMsg {
-    /// retrieve info about skull types from the svg server
-    GetSkullTypeInfo {},
-}
-
-impl HandleCallback for SelfHandleMsg {
-    const BLOCK_SIZE: usize = BLOCK_SIZE;
 }

@@ -11,6 +11,10 @@ pub const INGREDIENTS_KEY: &[u8] = b"ingr";
 pub const INGRED_SETS_KEY: &[u8] = b"seting";
 /// storage key for the StakingState
 pub const STAKING_STATE_KEY: &[u8] = b"stkst";
+/// storage key for the CrateState
+pub const CRATE_STATE_KEY: &[u8] = b"crtst";
+/// storage key for the crating base metadata
+pub const CRATE_META_KEY: &[u8] = b"metcrt";
 /// storage key for the AlchemyState
 pub const ALCHEMY_STATE_KEY: &[u8] = b"alcst";
 /// storage key for the skulls contract info
@@ -56,4 +60,13 @@ pub struct SkullStakeInfo {
     pub addr: CanonicalAddr,
     pub stake: u64,
     pub claim: u64,
+}
+
+/// info about crating state
+#[derive(Serialize, Deserialize)]
+pub struct CrateState {
+    /// true if crating is halted
+    pub halt: bool,
+    /// cnt of crates created
+    pub cnt: u128,
 }

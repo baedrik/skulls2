@@ -4,7 +4,7 @@
   "description": "Queries",
   "oneOf": [
     {
-      "description": "displays the halt statuses for staking and alchemy",
+      "description": "displays the halt statuses for staking, crating, and alchemy",
       "type": "object",
       "required": [
         "halt_statuses"
@@ -17,7 +17,7 @@
       "additionalProperties": false
     },
     {
-      "description": "displays the staking and alchemy states",
+      "description": "displays the staking, crating, and alchemy states",
       "type": "object",
       "required": [
         "states"

@@ -316,6 +316,9 @@ fn try_add_categories(
             skip: cat_inf.skip,
             cnt: 0,
         };
+        if cat.skip && !state.skip.contains(&state.cat_cnt) {
+            state.skip.push(state.cat_cnt);
+        }
         add_variants(deps.storage, &cat_key, cat_inf.variants, &mut cat)?;
         let mut cat_store = PrefixedStorage::new(deps.storage, PREFIX_CATEGORY);
         save(&mut cat_store, &cat_key, &cat)?;
@@ -1719,9 +1722,9 @@ fn get_type_layers(storage: &dyn Storage) -> StdResult<(StoredLayerId, StoredLay
         &[PREFIX_VARIANT_MAP, &eye_type_idx.to_le_bytes()],
     );
     let cyclops_idx: u8 =
-        may_load(&et_var_map, "EyeType.Cyclops".as_bytes())?.ok_or_else(|| {
+        may_load(&et_var_map, "Eye Type.Cyclops".as_bytes())?.ok_or_else(|| {
             StdError::generic_err(
-                "Did not find expected EyeType.Cyclops variant for Eye Type layer category",
+                "Did not find expected Eye Type.Cyclops variant for Eye Type layer category",
             )
         })?;
 
